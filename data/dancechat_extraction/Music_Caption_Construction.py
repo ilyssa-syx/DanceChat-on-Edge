@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 import librosa
 from chord_extractor.extractors import Chordino
-from essentia.standard import Loader, KeyExtractor
+from essentia.standard import MonoLoader, KeyExtractor
 from BeatNet.BeatNet import BeatNet
 import warnings
 warnings.filterwarnings("ignore")
@@ -142,7 +142,7 @@ Key Analysis
 return: str
 """
 def extract_key(audio_path):
-    loader = Loader(filename=audio_path, sampleRate=44100)
+    loader = MonoLoader(filename=audio_path, sampleRate=44100)
     audio = loader()  # 返回 NumPy array，shape=(n_samples,)
     extractor = KeyExtractor()
     key, scale, strength = extractor(audio)

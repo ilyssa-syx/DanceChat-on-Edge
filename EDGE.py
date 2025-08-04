@@ -48,7 +48,7 @@ class EDGE:
         rot_dim = 24 * 6  # 24 joints, 6dof
         self.repr_dim = repr_dim = pos_dim + rot_dim + 4
 
-        feature_dim = 35 if use_baseline_feats else 4800
+        feature_dim = 512
 
         horizon_seconds = 5
         FPS = 30

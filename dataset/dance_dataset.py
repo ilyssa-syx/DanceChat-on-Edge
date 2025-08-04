@@ -71,19 +71,25 @@ class AISTPPDataset(Dataset):
         pose_input = self.process_dataset(data["pos"], data["q"])
         self.data = {
             "pose": pose_input,
-            "filenames": data["filenames"],
+            "filenames_jukebox": data["filenames_jukebox"],
+            "filenames_beat": data["filenames_beat"],
+            "filenames_text": data["filenames_text"],
             "wavs": data["wavs"],
         }
-        assert len(pose_input) == len(data["filenames"])
+        assert len(pose_input) == len(data["filenames_jukebox"])
         self.length = len(pose_input)
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, idx):
-        filename_ = self.data["filenames"][idx]
-        feature = torch.from_numpy(np.load(filename_))
-        return self.data["pose"][idx], feature, filename_, self.data["wavs"][idx]
+        filename_jukebox = self.data["filenames_jukebox"][idx]
+        juke_feature = torch.from_numpy(np.load(filename_jukebox))
+        filename_beat = self.data["filenames_beat"][idx]
+        beat_feature = torch.from_numpy(np.load(filename_beat))
+        filename_text = self.data["filenames_text"][idx]
+        text_feature = torch.from_numpy(np.load(filename_text))
+        return self.data["pose"][idx], juke_feature, beat_feature, text_feature, filename_jukebox, self.data["wavs"][idx]
 
     def load_aistpp(self):
         # open data path
@@ -100,35 +106,46 @@ class AISTPPDataset(Dataset):
         #   |    |- jukebox_features
         #   |    |- motions
         #   |    |- wavs
+        # 补充以下内容：
+        #   |    | - beat_feats
+        #   |    | - text_encodings
 
         motion_path = os.path.join(split_data_path, "motions_sliced")
-        sound_path = os.path.join(split_data_path, f"{self.feature_type}_feats")
+        jukebox_path = os.path.join(split_data_path, f"jukebox_feats")
+        beat_path = os.path.join(split_data_path, f"beat_feats/npy")
+        text_path = os.path.join(split_data_path, f"text_encodings/npy")
         wav_path = os.path.join(split_data_path, f"wavs_sliced")
         # sort motions and sounds
         motions = sorted(glob.glob(os.path.join(motion_path, "*.pkl")))
-        features = sorted(glob.glob(os.path.join(sound_path, "*.npy")))
+        jukeboxs = sorted(glob.glob(os.path.join(jukebox_path, "*.npy")))
+        beats = sorted(glob.glob(os.path.join(beat_path, "*.npy")))
+        texts = sorted(glob.glob(os.path.join(text_path, "*.npy")))
         wavs = sorted(glob.glob(os.path.join(wav_path, "*.wav")))
 
         # stack the motions and features together
         all_pos = []
         all_q = []
-        all_names = []
-        all_wavs = []
-        assert len(motions) == len(features)
-        for motion, feature, wav in zip(motions, features, wavs):
+        all_juke, all_beat, all_text, all_wav = [], [], [], []
+
+        assert len(motions) == len(jukeboxs) == len(beats) == len(texts) == len(wavs), str((len(motions), len(jukeboxs), len(beats), len(texts), len(wavs)))
+        for motion, jukebox, beat, text, wav in zip(motions, jukeboxs, beats, texts, wavs):
             # make sure name is matching
             m_name = os.path.splitext(os.path.basename(motion))[0]
-            f_name = os.path.splitext(os.path.basename(feature))[0]
+            j_name = os.path.splitext(os.path.basename(jukebox))[0]
+            b_name = os.path.splitext(os.path.basename(beat))[0]
+            t_name = os.path.splitext(os.path.basename(text))[0]
             w_name = os.path.splitext(os.path.basename(wav))[0]
-            assert m_name == f_name == w_name, str((motion, feature, wav))
+            assert m_name == j_name == b_name == t_name == w_name, str((motion, jukebox, beat, text, wav))
             # load motion
             data = pickle.load(open(motion, "rb"))
             pos = data["pos"]
             q = data["q"]
             all_pos.append(pos)
             all_q.append(q)
-            all_names.append(feature)
-            all_wavs.append(wav)
+            all_juke.append(jukebox)
+            all_beat.append(beat)
+            all_text.append(text)
+            all_wav.append(wav)
 
         all_pos = np.array(all_pos)  # N x seq x 3
         all_q = np.array(all_q)  # N x seq x (joint * 3)
@@ -136,7 +153,14 @@ class AISTPPDataset(Dataset):
         print(all_pos.shape)
         all_pos = all_pos[:, :: self.data_stride, :]
         all_q = all_q[:, :: self.data_stride, :]
-        data = {"pos": all_pos, "q": all_q, "filenames": all_names, "wavs": all_wavs}
+        data = {
+            "pos": all_pos,
+            "q": all_q,
+            "filenames_jukebox": all_juke,
+            "filenames_beat": all_beat,
+            "filenames_text": all_text,
+            "wavs": all_wav,
+        }
         return data
 
     def process_dataset(self, root_pos, local_q):
