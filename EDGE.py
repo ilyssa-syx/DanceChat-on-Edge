@@ -56,12 +56,17 @@ class EDGE:
 
         self.accelerator.wait_for_everyone()
 
+        # 🔧 修复1：改进checkpoint加载逻辑
         checkpoint = None
         if checkpoint_path != "":
+            if self.accelerator.is_main_process:
+                print(f"🔄 Loading checkpoint from: {checkpoint_path}")
             checkpoint = torch.load(
                 checkpoint_path, map_location=self.accelerator.device
             )
             self.normalizer = checkpoint["normalizer"]
+            if self.accelerator.is_main_process:
+                print("✅ Checkpoint loaded successfully")
 
         model = DanceDecoder(
             nfeats=repr_dim,
@@ -99,13 +104,31 @@ class EDGE:
         optim = Adan(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
         self.optim = self.accelerator.prepare(optim)
 
+        # 🔧 修复2：改进模型状态加载，添加优化器状态加载
         if checkpoint_path != "":
+            if self.accelerator.is_main_process:
+                print("🔄 Loading model and optimizer states...")
+            
+            # 加载模型状态
             self.model.load_state_dict(
                 maybe_wrap(
                     checkpoint["ema_state_dict" if EMA else "model_state_dict"],
                     num_processes,
                 )
             )
+            
+            # 🔧 新增：加载优化器状态
+            if "optimizer_state_dict" in checkpoint:
+                try:
+                    self.optim.load_state_dict(checkpoint["optimizer_state_dict"])
+                    if self.accelerator.is_main_process:
+                        print("✅ Optimizer state loaded")
+                except Exception as e:
+                    if self.accelerator.is_main_process:
+                        print(f"⚠️  Could not load optimizer state: {e}")
+            
+            if self.accelerator.is_main_process:
+                print("✅ Model checkpoint fully loaded!")
 
     def eval(self):
         self.diffusion.eval()
@@ -189,18 +212,31 @@ class EDGE:
             wdir.mkdir(parents=True, exist_ok=True)
 
         self.accelerator.wait_for_everyone()
-        for epoch in range(1, opt.epochs + 1):
+
+        start_epoch = 1
+        if hasattr(opt, 'checkpoint') and opt.checkpoint and os.path.exists(opt.checkpoint):
+            try:
+                checkpoint_filename = os.path.basename(opt.checkpoint)
+                if 'train-' in checkpoint_filename:
+                    epoch_num = int(checkpoint_filename.split('train-')[1].split('.')[0])
+                    start_epoch = epoch_num + 1
+                    if self.accelerator.is_main_process:
+                        print(f"🔄 Resuming training from epoch {start_epoch} (loaded from {opt.checkpoint})")
+            except Exception as e:
+                if self.accelerator.is_main_process:
+                    print(f"⚠️  Could not determine start epoch from checkpoint filename, starting from epoch 1: {e}")
+        for epoch in range(start_epoch, opt.epochs + 1):
             avg_loss = 0
             avg_vloss = 0
             avg_fkloss = 0
             avg_footloss = 0
             # train
             self.train()
-            for step, (x, cond, filename, wavnames) in enumerate(
+            for step, (x, cond1, cond2, cond3, filename, wavnames) in enumerate(
                 load_loop(train_data_loader)
             ):
                 total_loss, (loss, v_loss, fk_loss, foot_loss) = self.diffusion(
-                    x, cond, t_override=None
+                    x, cond1, cond2, cond3, t_override=None
                 )
                 self.optim.zero_grad()
                 self.accelerator.backward(total_loss)
@@ -233,7 +269,7 @@ class EDGE:
                         "Train Loss": avg_loss,
                         "V Loss": avg_vloss,
                         "FK Loss": avg_fkloss,
-                        "Foot Loss": avg_footloss,
+                        "Foot Loss": avg_footloss
                     }
                     wandb.log(log_dict)
                     ckpt = {
@@ -250,11 +286,15 @@ class EDGE:
                     shape = (render_count, self.horizon, self.repr_dim)
                     print("Generating Sample")
                     # draw a music from the test dataset
-                    (x, cond, filename, wavnames) = next(iter(test_data_loader))
-                    cond = cond.to(self.accelerator.device)
+                    (x, cond1, cond2, cond3, filename, wavnames) = next(iter(test_data_loader))
+                    cond1 = cond1.to(self.accelerator.device)
+                    cond2 = cond2.to(self.accelerator.device)
+                    cond3 = cond3.to(self.accelerator.device)
                     self.diffusion.render_sample(
                         shape,
-                        cond[:render_count],
+                        cond1[:render_count],
+                        cond2[:render_count],
+                        cond3[:render_count],
                         self.normalizer,
                         epoch,
                         os.path.join(opt.render_dir, "train_" + opt.exp_name),
@@ -268,15 +308,21 @@ class EDGE:
     def render_sample(
         self, data_tuple, label, render_dir, render_count=-1, fk_out=None, render=True
     ):
-        _, cond, wavname = data_tuple
-        assert len(cond.shape) == 3
+        _, cond1, cond2, cond3, wavname = data_tuple
+        assert len(cond1.shape) == 3
+        assert len(cond2.shape) == 3
+        assert len(cond3.shape) == 3
         if render_count < 0:
-            render_count = len(cond)
+            render_count = len(cond1)
         shape = (render_count, self.horizon, self.repr_dim)
-        cond = cond.to(self.accelerator.device)
+        cond1 = cond1.to(self.accelerator.device)
+        cond2 = cond2.to(self.accelerator.device)
+        cond3 = cond3.to(self.accelerator.device)
         self.diffusion.render_sample(
             shape,
-            cond[:render_count],
+            cond1[:render_count],
+            cond2[:render_count],
+            cond3[:render_count],
             self.normalizer,
             label,
             render_dir,

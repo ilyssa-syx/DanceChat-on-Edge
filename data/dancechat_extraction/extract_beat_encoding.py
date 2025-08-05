@@ -42,9 +42,8 @@ class BeatEncoder(nn.Module):
             y, sr = librosa.load(audio_path, sr=self.sr)
             audio_duration = len(y) / sr
             
-            if target_length is None:
-                # 自动计算目标长度（每秒约4帧）
-                target_length = max(int(audio_duration * 4), 10)
+            target_length = int(audio_duration * 30)
+
             
             print(f"Processing: {os.path.basename(audio_path)}")
             print(f"  Duration: {audio_duration:.2f}s, Target length: {target_length}")

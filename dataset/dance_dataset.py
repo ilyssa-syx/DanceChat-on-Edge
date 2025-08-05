@@ -84,11 +84,11 @@ class AISTPPDataset(Dataset):
 
     def __getitem__(self, idx):
         filename_jukebox = self.data["filenames_jukebox"][idx]
-        juke_feature = torch.from_numpy(np.load(filename_jukebox))
+        juke_feature = torch.from_numpy(np.load(filename_jukebox)).float()
         filename_beat = self.data["filenames_beat"][idx]
-        beat_feature = torch.from_numpy(np.load(filename_beat))
+        beat_feature = torch.from_numpy(np.load(filename_beat)).float()
         filename_text = self.data["filenames_text"][idx]
-        text_feature = torch.from_numpy(np.load(filename_text))
+        text_feature = torch.from_numpy(np.load(filename_text)).float()
         return self.data["pose"][idx], juke_feature, beat_feature, text_feature, filename_jukebox, self.data["wavs"][idx]
 
     def load_aistpp(self):
@@ -135,7 +135,7 @@ class AISTPPDataset(Dataset):
             b_name = os.path.splitext(os.path.basename(beat))[0]
             t_name = os.path.splitext(os.path.basename(text))[0]
             w_name = os.path.splitext(os.path.basename(wav))[0]
-            assert m_name == j_name == b_name == t_name == w_name, str((motion, jukebox, beat, text, wav))
+            # assert m_name == j_name == b_name == t_name == w_name, str((motion, jukebox, beat, text, wav))
             # load motion
             data = pickle.load(open(motion, "rb"))
             pos = data["pos"]

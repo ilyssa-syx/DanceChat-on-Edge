@@ -11,6 +11,7 @@ from torch.nn import functional as F
 from model.rotary_embedding_torch import RotaryEmbedding
 from model.utils import PositionalEncoding, SinusoidalPosEmb, prob_mask_like
 
+from typing import Dict
 
 class DenseFiLM(nn.Module):
     """Feature-wise linear modulation (FiLM) generator."""
@@ -193,17 +194,17 @@ class FiLMTransformerDecoderLayer(nn.Module):
     # qkv
     def _sa_block(self, x, attn_mask, key_padding_mask):
         qk = self.rotary.rotate_queries_or_keys(x) if self.use_rotary else x
-        x = self.self_attn(
+        x = self.self_attn( # nn.MultiheadAttention层
             qk,
             qk,
             x,
-            attn_mask=attn_mask,
-            key_padding_mask=key_padding_mask,
+            attn_mask=attn_mask, # 全注意力 or 因果注意力
+            key_padding_mask=key_padding_mask, # 是否要attend到padding
             need_weights=False,
         )[0]
         return self.dropout1(x)
 
-    # multihead attention block
+    # cross attention block
     # qkv
     def _mha_block(self, x, mem, attn_mask, key_padding_mask):
         q = self.rotary.rotate_queries_or_keys(x) if self.use_rotary else x
@@ -234,6 +235,67 @@ class DecoderLayerStack(nn.Module):
             x = layer(x, cond, t)
         return x
 
+class MultiModalProjector(nn.Module):
+    def __init__(self, input_dims: Dict[str, int], hidden_dim: int = 512):
+        super().__init__()
+        self.hidden_dim = hidden_dim
+
+        # Jukebox: 2-layer Transformer
+        encoder_layer = lambda: nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=8, batch_first=True)
+        self.jukebox_proj = nn.Sequential(
+            nn.Linear(input_dims['jukebox'], hidden_dim),
+            nn.ReLU(),
+            nn.TransformerEncoder(encoder_layer(), num_layers=2),
+        )
+
+        # Beat: Linear projection
+        self.beat_proj = nn.Linear(input_dims['beat'], hidden_dim)
+
+        # Text: 4-layer Transformer to get global pooled (512,)
+        self.text_proj = nn.Sequential(
+            nn.Linear(input_dims['text'], hidden_dim),
+            nn.ReLU(),
+            nn.TransformerEncoder(encoder_layer(), num_layers=4),
+        )
+
+        # Fusion MLP for feature1
+        # 对应文中的cross-modal encoder
+        self.fusion_mlp = nn.Sequential(
+            nn.LayerNorm(hidden_dim),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim)
+        )
+
+    def forward(self, jukebox_feat, beat_feat, text_feat):
+        # shapes: (B, 150, ?), (B, 150, ?), (B, ?, ?)
+
+        if text_feat.dim() == 1:
+            # 如果是 (512,)，扩展为 (1, 1, 512)
+            text_feat = text_feat.unsqueeze(0).unsqueeze(0)
+        elif text_feat.dim() == 2:
+            # 如果是 (B, 512)，扩展为 (B, 1, 512)
+            text_feat = text_feat.unsqueeze(1)
+        # Step 1: projection
+        jukebox_out = self.jukebox_proj(jukebox_feat)  # (B, 150, 512)
+        beat_out = self.beat_proj(beat_feat)           # (B, 150, 512)
+
+        # Text projection: assume (B, T_text, D_text) → pool to (B, 512)
+        text_encoded = self.text_proj(text_feat.float())       # (B, T, 512)
+        text_pooled = text_encoded.mean(dim=1)         # (B, 512)
+
+        # Step 2: feature1 for FiLM
+        fused_music = jukebox_out + beat_out           # (B, 150, 512)
+        fused_music_mlp = self.fusion_mlp(fused_music) # (B, 150, 512)
+        text_added = fused_music_mlp + text_pooled.unsqueeze(1)  # (B, 150, 512)
+        feature1 = text_added
+
+        # Step 3: feature2 for CA
+        feature2 = torch.cat([fused_music_mlp, text_pooled.unsqueeze(1)], dim=1)  # (B, 151, 512)
+
+        return feature1, feature2
+
+
 """
 主Decoder类
 """
@@ -247,7 +309,7 @@ class DanceDecoder(nn.Module):
         num_layers: int = 4,
         num_heads: int = 4,
         dropout: float = 0.1,
-        cond_feature_dim: int = 4800,
+        cond_feature_dim: int = 512,
         activation: Callable[[Tensor], Tensor] = F.gelu,
         use_rotary=True,
         **kwargs
@@ -283,28 +345,19 @@ class DanceDecoder(nn.Module):
         )
 
         # null embeddings for guidance dropout
-        self.null_cond_embed = nn.Parameter(torch.randn(1, seq_len, latent_dim))
+        self.null_cond_embed = nn.Parameter(torch.randn(1, seq_len + 1, latent_dim))
         self.null_cond_hidden = nn.Parameter(torch.randn(1, latent_dim))
 
         self.norm_cond = nn.LayerNorm(latent_dim)
 
         # input projection
         self.input_projection = nn.Linear(nfeats, latent_dim)
-        self.cond_encoder = nn.Sequential()
-        for _ in range(2):
-            self.cond_encoder.append(
-                TransformerEncoderLayer(
-                    d_model=latent_dim,
-                    nhead=num_heads,
-                    dim_feedforward=ff_size,
-                    dropout=dropout,
-                    activation=activation,
-                    batch_first=True,
-                    rotary=self.rotary,
-                )
-            )
-        # conditional projection
-        self.cond_projection = nn.Linear(cond_feature_dim, latent_dim)
+        
+        self.multi_modal_projector = MultiModalProjector(
+            input_dims={'jukebox': 4800, 'beat': 256, 'text': 512},  # 假设 text 编码前是 512
+            hidden_dim=512
+        )
+        
         self.non_attn_cond_projection = nn.Sequential(
             nn.LayerNorm(latent_dim),
             nn.Linear(latent_dim, latent_dim),
@@ -333,37 +386,52 @@ class DanceDecoder(nn.Module):
     """
     classifier-free guidance
     """
-    def guided_forward(self, x, cond_embed, times, guidance_weight):
-        unc = self.forward(x, cond_embed, times, cond_drop_prob=1)
-        conditioned = self.forward(x, cond_embed, times, cond_drop_prob=0)
+    def guided_forward(self, x, cond1, cond2, cond3, times, guidance_weight):
+        unc = self.forward(x, cond1, cond2, cond3, times, cond_drop_prob=1)
+        conditioned = self.forward(x, cond1, cond2, cond3, times, cond_drop_prob=0)
 
         return unc + (conditioned - unc) * guidance_weight
 
     def forward(
-        self, x: Tensor, cond_embed: Tensor, times: Tensor, cond_drop_prob: float = 0.0
+        self, x: Tensor, cond1: Tensor, cond2: Tensor, cond3: Tensor, times: Tensor, cond_drop_prob: float = 0.0
     ):
+        """
+        feature1 for FiLM, feature2 for cross-attention
+        """
+        feature1, feature2 = self.multi_modal_projector(cond1, cond2, cond3)
         batch_size, device = x.shape[0], x.device
 
+        """
+        Motion input projection
+        """
         # project to latent space
         x = self.input_projection(x)
         # add the positional embeddings of the input sequence to provide temporal information
         x = self.abs_pos_encoding(x)
 
+        """
+        Conditional Dropout Mask
+        """
         # create music conditional embedding with conditional dropout
         keep_mask = prob_mask_like((batch_size,), 1 - cond_drop_prob, device=device)
         keep_mask_embed = rearrange(keep_mask, "b -> b 1 1")
         keep_mask_hidden = rearrange(keep_mask, "b -> b 1")
 
-        cond_tokens = self.cond_projection(cond_embed)
+        """
+        cross-attention input
+        """
+        cond_tokens = feature2
         # encode tokens
         cond_tokens = self.abs_pos_encoding(cond_tokens)
-        cond_tokens = self.cond_encoder(cond_tokens)
-
+        
         null_cond_embed = self.null_cond_embed.to(cond_tokens.dtype)
         cond_tokens = torch.where(keep_mask_embed, cond_tokens, null_cond_embed)
-
-        mean_pooled_cond_tokens = cond_tokens.mean(dim=-2)
-        cond_hidden = self.non_attn_cond_projection(mean_pooled_cond_tokens)
+        
+        """
+        FiLM input
+        """
+        mean_pooled_feature1 = feature1.mean(dim=-2)
+        cond_hidden = self.non_attn_cond_projection(mean_pooled_feature1)
 
         # create the diffusion timestep embedding, add the extra music projection
         t_hidden = self.time_mlp(times)
@@ -383,6 +451,7 @@ class DanceDecoder(nn.Module):
 
         # Pass through the transformer decoder
         # attending to the conditional embedding
+        # 相当于diffusion model里面那个xN
         output = self.seqTransDecoder(x, cond_tokens, t)
 
         output = self.final_layer(output)
