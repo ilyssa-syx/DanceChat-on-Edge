@@ -1,12 +1,25 @@
-import numpy as np
 import os
+import pickle
+from dataset.dance_dataset import AISTPPDataset  # ⚠️ 路径按你项目结构修改
 
-base_path = "./data/test"
+def test_aistpp_name_matching():
+    # 设置路径（根据你的项目修改）
+    data_path = "data"
+    backup_path = "data"
 
-jukebox = np.load(os.path.join(base_path, "jukebox_feats", "gBR_sBM_cAll_d04_mBR0_ch02_slice0.npy"))
-beat     = np.load(os.path.join(base_path, "beat_feats/npy", "gBR_sBM_cAll_d04_mBR0_ch02_slice0_beat_encoding.npy"))
-text     = np.load(os.path.join(base_path, "text_encodings/npy", "gBR_sBM_cAll_d04_mBR0_ch02_slice0_response_text_encoding.npy"))
+    # 实例化 dataset（不需要训练，只测试加载）
+    dataset = AISTPPDataset(
+        data_path="data",
+        backup_path=backup_path,
+        train=True,
+        force_reload=True  # 强制重新 load_aistpp()
+    )
 
-print("jukebox shape:", jukebox.shape)
-print("beat shape   :", beat.shape)
-print("text shape   :", text.shape)
+    print("\n🔍 Testing name matching for loaded samples...")
+
+    mismatches = []
+    for i in range(20):
+        print()
+
+if __name__ == "__main__":
+    test_aistpp_name_matching()

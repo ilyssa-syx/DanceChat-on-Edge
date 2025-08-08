@@ -13,6 +13,8 @@ from matplotlib.colors import ListedColormap
 from pytorch3d.transforms import (axis_angle_to_quaternion, quaternion_apply,
                                   quaternion_multiply)
 from tqdm import tqdm
+from matplotlib.animation import PillowWriter
+
 
 smpl_joints = [
     "root",  # 0
@@ -215,10 +217,13 @@ def skeleton_render(
         )
     if sound:
         # make a temporary directory to save the intermediate gif in
+        
         if render:
             temp_dir = TemporaryDirectory()
             gifname = os.path.join(temp_dir.name, f"{epoch}.gif")
+            print('hi there')
             anim.save(gifname)
+        
 
         # stitch wavs
         if stitch:
@@ -234,11 +239,11 @@ def skeleton_render(
                 total_wav[idx : idx + half] = audio[half:]
                 idx += half
             # save a dummy spliced audio
-            audioname = f"{temp_dir.name}/tempsound.wav" if render else os.path.join(out, f'{epoch}_{"_".join(os.path.splitext(os.path.basename(name[0]))[0].split("_")[:-1])}.wav')
+            audioname = f"{temp_dir.name}/tempsound.wav" if render else os.path.join(out, f'{epoch}_{"_".join(os.path.splitext(os.path.basename(name[0]))[0].split("_"))}.wav')
             sf.write(audioname, total_wav, sr)
             outname = os.path.join(
                 out,
-                f'{epoch}_{"_".join(os.path.splitext(os.path.basename(name[0]))[0].split("_")[:-1])}.mp4',
+                f'{epoch}_{"_".join(os.path.splitext(os.path.basename(name[0]))[0].split("_"))}.mp4',
             )
         else:
             assert type(name) == str
@@ -257,7 +262,10 @@ def skeleton_render(
             path = os.path.normpath(name)
             pathparts = path.split(os.sep)
             gifname = os.path.join(out, f"{pathparts[-1][:-4]}.gif")
-            anim.save(gifname, savefig_kwargs={"transparent": True, "facecolor": "none"},)
+            anim.save(
+                gifname,            # <- 这里换成 PillowWriter
+                savefig_kwargs={"transparent": True, "facecolor": "none"},
+            )
     plt.close()
 
 

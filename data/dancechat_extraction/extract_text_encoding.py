@@ -11,17 +11,50 @@ from tqdm import tqdm
 
 
 class TextEncoder(nn.Module):
-    """
-    文本编码器，只保留冻结的CLIP编码特征，不做额外随机投影
-    """
-    def __init__(self, clip_dim: int = 512):
+    def __init__(self, clip_model_name: str = "ViT-B/32"):
         super().__init__()
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         # 加载CLIP文本编码器，并冻结参数
-        self.clip_model, _ = clip.load("ViT-B/32", device=device)
+        self.motiondiffuse_checkpoint_path = "../text2motion/checkpoints/t2m/t2m_motiondiffuse/model/latest.tar"
+        self.clip_model, _ = clip.load(clip_model_name, device=self.device)
+        
+        with torch.no_grad():
+            dummy_text = clip.tokenize(["test"]).to(self.device)
+            dummy_features = self.clip_model.encode_text(dummy_text)
+            self.clip_dim = dummy_features.shape[1]
+    
+        if self.motiondiffuse_checkpoint_path:
+            self._load_motiondiffuse_clip_weights(self.motiondiffuse_checkpoint_path)
+            print(f"✓ Text encoder initialized with MotionDiffuse CLIP weights (dim={self.clip_dim})")
+        else:
+            print(f"✓ Text encoder initialized with standard CLIP weights (dim={self.clip_dim})")
+        
         for param in self.clip_model.parameters():
             param.requires_grad = False
-        print(f"✓ Text encoder initialized with frozen CLIP only (dim={clip_dim})")
+
+    def _load_motiondiffuse_clip_weights(self, checkpoint_path: str):
+        """从 MotionDiffuse 的 checkpoint 中加载 CLIP 文本编码器权重"""
+        if not os.path.exists(checkpoint_path):
+            raise FileNotFoundError(f"Checkpoint file {checkpoint_path} does not exist.")
+        
+        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        state_dict = checkpoint['encoder']
+        
+        clip_state_dict = {}
+        for key, value in state_dict.items():
+            if key.startswith('clip.'):
+                clip_key = key[5:]  # 去掉 'clip.' 前缀)
+                clip_state_dict[clip_key] = value
+        
+        missing_keys, unexpected_keys = self.clip_model.load_state_dict(clip_state_dict, strict=False)
+
+        if missing_keys:
+            print(f"Warning: Missing keys in CLIP model: {missing_keys}")
+        if unexpected_keys:
+            print(f"Warning: Unexpected keys in checkpoint: {unexpected_keys}")
+            
+        print("✓ Successfully loaded MotionDiffuse CLIP weights")
+        self.clip_model.to(self.device)
 
     def forward(self, text_instructions: List[str]) -> torch.Tensor:
         """
@@ -36,6 +69,7 @@ class TextEncoder(nn.Module):
         with torch.no_grad():
             clip_features = self.clip_model.encode_text(text_tokens)  # (B, clip_dim)
         return clip_features
+    
 
 
 def load_text_from_file(file_path: str) -> str:
@@ -53,9 +87,6 @@ def extract_text_encodings_batch(
     text_files: List[str],
     batch_size: int = 8
 ) -> Dict[str, np.ndarray]:
-    """
-    批量提取文本编码，仅输出CLIP原始特征
-    """
     encodings = {}
     for i in tqdm(range(0, len(text_files), batch_size), desc="Extracting text encodings"):
         batch = text_files[i:i + batch_size]
@@ -74,32 +105,24 @@ def extract_text_encodings_batch(
     return encodings
 
 
-def save_encodings(encodings: Dict[str, np.ndarray], output_dir: str, save_format: str = 'npy'):
+def save_encodings(encodings: Dict[str, np.ndarray], output_dir: str):
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    if save_format in ['npy', 'both']:
-        npy_dir = output_path / 'npy'
-        npy_dir.mkdir(exist_ok=True)
-        for fn, enc in tqdm(encodings.items(), desc="Saving .npy files"):
-            base = os.path.splitext(fn)[0]
-            np.save(npy_dir / f"{base}_text_encoding.npy", enc)
-    if save_format in ['json', 'both']:
-        md = {
-            'num_files': len(encodings),
-            'dim': next(iter(encodings.values())).shape[0] if encodings else 0,
-            'files': list(encodings.keys())
-        }
-        with open(output_path / 'metadata.json', 'w') as f:
-            json.dump(md, f, indent=2)
+    
+    npy_dir = output_path / 'npy'
+    npy_dir.mkdir(exist_ok=True)
+    for fn, enc in tqdm(encodings.items(), desc="Saving .npy files"):
+        base = os.path.splitext(fn)[0]
+        np.save(npy_dir / f"{base}.npy", enc)
+    
     print(f"✓ Saved {len(encodings)} text encodings to {output_dir}")
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_dir')
-    parser.add_argument('output_dir')
+    parser.add_argument('--input_dir')
+    parser.add_argument('--output_dir')
     parser.add_argument('--batch_size', type=int, default=8)
-    parser.add_argument('--save_format', choices=['npy','json','both'], default='npy')
     args = parser.parse_args()
     files = []
     for ext in ['.txt', '.md']:
@@ -109,7 +132,7 @@ def main():
         print("No text files found.")
         return
     enc = extract_text_encodings_batch(TextEncoder(), files, args.batch_size)
-    save_encodings(enc, args.output_dir, args.save_format)
+    save_encodings(enc, args.output_dir)
 
 if __name__ == '__main__':
     main()

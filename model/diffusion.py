@@ -132,6 +132,9 @@ class GaussianDiffusion(nn.Module):
 
         ## get loss coefficients and initialize objective
         self.loss_fn = F.mse_loss if loss_type == "l2" else F.l1_loss
+    
+
+    
 
 
 
@@ -465,7 +468,7 @@ class GaussianDiffusion(nn.Module):
 
         return sample
 
-    def p_losses(self, x_start, cond1, cond2, cond3, t):
+    def p_losses(self, x_start, cond1, cond2, cond3, emb1, emb2, emb3, t):
         noise = torch.randn_like(x_start)
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
 
@@ -532,24 +535,27 @@ class GaussianDiffusion(nn.Module):
         )
         foot_loss = reduce(foot_loss, "b ... -> b (...)", "mean")
 
+        align_loss = (1 - F.cosine_similarity(emb1, emb2, dim=-1)) + (1 - F.cosine_similarity(emb2, emb3, dim=-1))
+
         losses = (
             0.636 * loss.mean(),
             2.964 * v_loss.mean(),
             0.646 * fk_loss.mean(),
             10.942 * foot_loss.mean(),
+            0.005 * align_loss
         )
         return sum(losses), losses
 
-    def loss(self, x, cond1, cond2, cond3, t_override=None):
+    def loss(self, x, cond1, cond2, cond3, emb1, emb2, emb3, t_override=None):
         batch_size = len(x)
         if t_override is None:
             t = torch.randint(0, self.n_timestep, (batch_size,), device=x.device).long()
         else:
             t = torch.full((batch_size,), t_override, device=x.device).long()
-        return self.p_losses(x, cond1, cond2, cond3, t)
+        return self.p_losses(x, cond1, cond2, cond3, emb1, emb2, emb3, t)
 
-    def forward(self, x, cond1, cond2, cond3, t_override=None):
-        return self.loss(x, cond1, cond2, cond3, t_override)
+    def forward(self, x, cond1, cond2, cond3, emb1, emb2, emb3, t_override=None):
+        return self.loss(x, cond1, cond2, cond3, emb1, emb2, emb3, t_override)
 
     def partial_denoise(self, x, cond1, cond2, cond3, t):
         x_noisy = self.noise_to_t(x, t)
@@ -627,6 +633,8 @@ class GaussianDiffusion(nn.Module):
         # go 6d to ax
         q = ax_from_6v(q).to(device)
 
+        print('name in gdrs:', name) # 到这儿，name都是有slice后缀的
+
         if mode == "long":
             b, s, c1, c2 = q.shape
             assert s % 2 == 0
@@ -683,6 +691,8 @@ class GaussianDiffusion(nn.Module):
                 self.smpl.forward(full_q, full_pos).detach().cpu().numpy()
             )  # b, s, 24, 3
             # squeeze the batch dimension away and render
+
+            
             skeleton_render(
                 full_pose[0],
                 epoch=f"{epoch}",
@@ -693,8 +703,10 @@ class GaussianDiffusion(nn.Module):
                 sound_folder=sound_folder,
                 render=render
             )
+            
             if fk_out is not None:
-                outname = f'{epoch}_{"_".join(os.path.splitext(os.path.basename(name[0]))[0].split("_")[:-1])}.pkl'
+                base_name = os.path.splitext(os.path.basename(name[0]))[0]
+                outname = f'{epoch}_{base_name}.pkl'
                 Path(fk_out).mkdir(parents=True, exist_ok=True)
                 pickle.dump(
                     {

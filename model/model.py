@@ -150,6 +150,7 @@ class FiLMTransformerDecoderLayer(nn.Module):
         self.use_rotary = rotary is not None
 
     # x, cond, t
+    # 似乎与tgt_mask / memory_mask无关？并未看到调用时传入
     def forward(
         self,
         tgt,
@@ -252,10 +253,11 @@ class MultiModalProjector(nn.Module):
         self.beat_proj = nn.Linear(input_dims['beat'], hidden_dim)
 
         # Text: 4-layer Transformer to get global pooled (512,)
+        encoder_layer_text = lambda: nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=8, batch_first=True)
         self.text_proj = nn.Sequential(
             nn.Linear(input_dims['text'], hidden_dim),
             nn.ReLU(),
-            nn.TransformerEncoder(encoder_layer(), num_layers=4),
+            nn.TransformerEncoder(encoder_layer_text(), num_layers=4),
         )
 
         # Fusion MLP for feature1
@@ -266,6 +268,45 @@ class MultiModalProjector(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim)
         )
+
+    def load_text_encoder_weights(self, motiondiffuse_state_dict: Dict[str, torch.Tensor]):
+        print('entering')
+        new_state_dict = {}
+        
+        new_state_dict['text_proj.0.weight'] = motiondiffuse_state_dict['text_pre_proj.weight']
+        new_state_dict['text_proj.0.bias'] = motiondiffuse_state_dict['text_pre_proj.bias']
+        
+        for i in range(4):
+            source_prefix = f'textTransEncoder.layers.{i}'
+            target_prefix = f'text_proj.2.layers.{i}'
+            # Mapping for all weights and biases in a transformer layer
+            key_map = {
+                'self_attn.in_proj_weight': 'self_attn.in_proj_weight',
+                'self_attn.in_proj_bias': 'self_attn.in_proj_bias',
+                'self_attn.out_proj.weight': 'self_attn.out_proj.weight',
+                'self_attn.out_proj.bias': 'self_attn.out_proj.bias',
+                'linear1.weight': 'linear1.weight',
+                'linear1.bias': 'linear1.bias',
+                'linear2.weight': 'linear2.weight',
+                'linear2.bias': 'linear2.bias',
+                'norm1.weight': 'norm1.weight',
+                'norm1.bias': 'norm1.bias',
+                'norm2.weight': 'norm2.weight',
+                'norm2.bias': 'norm2.bias',
+            }
+            
+            for source_suffix, target_suffix in key_map.items():
+                source_key = f'{source_prefix}.{source_suffix}'
+                target_key = f'{target_prefix}.{target_suffix}'
+                print('haha:', source_key, target_key)
+                if source_key in motiondiffuse_state_dict.keys():
+                    print('yeah')
+                    new_state_dict[target_key] = motiondiffuse_state_dict[source_key]
+
+        # Load the mapped weights. strict=False is important because we are only
+        # loading a part of the model (the text encoder), not the whole thing.
+        self.load_state_dict(new_state_dict, strict=False)
+        print("✅ Successfully loaded MotionDiffuse weights into the text encoder.")
 
     def forward(self, jukebox_feat, beat_feat, text_feat):
         # shapes: (B, 150, ?), (B, 150, ?), (B, ?, ?)
@@ -293,7 +334,7 @@ class MultiModalProjector(nn.Module):
         # Step 3: feature2 for CA
         feature2 = torch.cat([fused_music_mlp, text_pooled.unsqueeze(1)], dim=1)  # (B, 151, 512)
 
-        return feature1, feature2
+        return feature1, feature2, fused_music_mlp.mean(dim=1), text_pooled
 
 
 """
@@ -304,7 +345,7 @@ class DanceDecoder(nn.Module):
         self,
         nfeats: int,
         seq_len: int = 150,  # 5 seconds, 30 fps
-        latent_dim: int = 256,
+        latent_dim: int = 512, # 注：EDGE.py中初始化的时候设成了512
         ff_size: int = 1024,
         num_layers: int = 4,
         num_heads: int = 4,
@@ -398,14 +439,14 @@ class DanceDecoder(nn.Module):
         """
         feature1 for FiLM, feature2 for cross-attention
         """
-        feature1, feature2 = self.multi_modal_projector(cond1, cond2, cond3)
+        feature1, feature2, fuse_music_mlp_pooled, text_pooled = self.multi_modal_projector(cond1, cond2, cond3)
         batch_size, device = x.shape[0], x.device
 
         """
         Motion input projection
         """
         # project to latent space
-        x = self.input_projection(x)
+        x = self.input_projection(x) # (B, 150, 512)
         # add the positional embeddings of the input sequence to provide temporal information
         x = self.abs_pos_encoding(x)
 
@@ -414,8 +455,10 @@ class DanceDecoder(nn.Module):
         """
         # create music conditional embedding with conditional dropout
         keep_mask = prob_mask_like((batch_size,), 1 - cond_drop_prob, device=device)
+        # 为一整个 batch 随机决定哪些样本“保留”条件信息，哪些样本“丢弃”条件（即做条件性 dropout）。
         keep_mask_embed = rearrange(keep_mask, "b -> b 1 1")
         keep_mask_hidden = rearrange(keep_mask, "b -> b 1")
+        # 拓展其维度，便于后面操作
 
         """
         cross-attention input
@@ -424,6 +467,7 @@ class DanceDecoder(nn.Module):
         # encode tokens
         cond_tokens = self.abs_pos_encoding(cond_tokens)
         
+        # 可学习的空条件嵌入，希望mask掉的时候可以用它代替真实值
         null_cond_embed = self.null_cond_embed.to(cond_tokens.dtype)
         cond_tokens = torch.where(keep_mask_embed, cond_tokens, null_cond_embed)
         
@@ -431,22 +475,22 @@ class DanceDecoder(nn.Module):
         FiLM input
         """
         mean_pooled_feature1 = feature1.mean(dim=-2)
-        cond_hidden = self.non_attn_cond_projection(mean_pooled_feature1)
+        cond_hidden = self.non_attn_cond_projection(mean_pooled_feature1) # (B, 512) -> (B, 512)
 
         # create the diffusion timestep embedding, add the extra music projection
-        t_hidden = self.time_mlp(times)
+        t_hidden = self.time_mlp(times) # (B, 512*4)
 
         # project to attention and FiLM conditioning
-        t = self.to_time_cond(t_hidden)
-        t_tokens = self.to_time_tokens(t_hidden)
+        t = self.to_time_cond(t_hidden) # (B, 512)
+        t_tokens = self.to_time_tokens(t_hidden) # (B, 2, 512)
 
         # FiLM conditioning
         null_cond_hidden = self.null_cond_hidden.to(t.dtype)
         cond_hidden = torch.where(keep_mask_hidden, cond_hidden, null_cond_hidden)
-        t += cond_hidden
+        t += cond_hidden # (B, 512)
 
         # cross-attention conditioning
-        c = torch.cat((cond_tokens, t_tokens), dim=-2)
+        c = torch.cat((cond_tokens, t_tokens), dim=-2) # (B, 153, 512)
         cond_tokens = self.norm_cond(c)
 
         # Pass through the transformer decoder
@@ -456,3 +500,9 @@ class DanceDecoder(nn.Module):
 
         output = self.final_layer(output)
         return output
+
+    def get_embeddings(self, cond1: Tensor, cond2: Tensor, cond3: Tensor):
+        feature1, feature2, fuse_music_mlp_pooled, text_pooled = self.multi_modal_projector(cond1, cond2, cond3)
+
+        
+        return fuse_music_mlp_pooled, text_pooled

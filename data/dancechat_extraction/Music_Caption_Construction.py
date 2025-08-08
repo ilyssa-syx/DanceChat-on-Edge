@@ -24,10 +24,13 @@ def extract_tempo_and_beats(audio_path, sr=22050):
         
         # Extract beats and downbeats using BeatNet
         output = beat_estimator.process(audio_path)
+        # output is a 2D array with shape (n_beats, 2)
+        # where first column is the beat time (specific number) and second column indicates downbeat (0/1, 1 for downbeat)
         
         beats = output[:, 0]  # Beat times
         downbeats = output[output[:, 1] == 1, 0]  # Downbeat times (where beat=1)
-        
+        # 取“第1列为1”的idx的第0列
+
         # Calculate tempo (measured with BPM)
         if len(beats) > 1:
             beat_intervals = np.diff(beats)

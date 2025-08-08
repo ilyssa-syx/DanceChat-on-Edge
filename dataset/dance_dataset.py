@@ -137,6 +137,7 @@ class AISTPPDataset(Dataset):
             w_name = os.path.splitext(os.path.basename(wav))[0]
             # assert m_name == j_name == b_name == t_name == w_name, str((motion, jukebox, beat, text, wav))
             # load motion
+            print(m_name, j_name, b_name, t_name, w_name)
             data = pickle.load(open(motion, "rb"))
             pos = data["pos"]
             q = data["q"]

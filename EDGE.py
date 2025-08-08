@@ -56,11 +56,14 @@ class EDGE:
 
         self.accelerator.wait_for_everyone()
 
-        # 🔧 修复1：改进checkpoint加载逻辑
+        motiondiffuse_weights = torch.load("../text2motion/checkpoints/t2m/t2m_motiondiffuse/model/latest.tar")
+        motiondiffuse = motiondiffuse_weights['encoder']
+
+
         checkpoint = None
         if checkpoint_path != "":
             if self.accelerator.is_main_process:
-                print(f"🔄 Loading checkpoint from: {checkpoint_path}")
+                print(f"Loading checkpoint from: {checkpoint_path}") # 只打印一次这句话
             checkpoint = torch.load(
                 checkpoint_path, map_location=self.accelerator.device
             )
@@ -79,6 +82,8 @@ class EDGE:
             cond_feature_dim=feature_dim,
             activation=F.gelu,
         )
+
+        
 
         smpl = SMPLSkeleton(self.accelerator.device)
         diffusion = GaussianDiffusion(
@@ -104,6 +109,10 @@ class EDGE:
         optim = Adan(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
         self.optim = self.accelerator.prepare(optim)
 
+        if self.accelerator.is_main_process:
+            print("🔧 Initializing text encoder with MotionDiffuse weights...")
+        self.model.multi_modal_projector.load_text_encoder_weights(motiondiffuse)
+        print('finished')
         # 🔧 修复2：改进模型状态加载，添加优化器状态加载
         if checkpoint_path != "":
             if self.accelerator.is_main_process:
@@ -230,13 +239,15 @@ class EDGE:
             avg_vloss = 0
             avg_fkloss = 0
             avg_footloss = 0
+            avg_alignloss = 0
             # train
             self.train()
             for step, (x, cond1, cond2, cond3, filename, wavnames) in enumerate(
                 load_loop(train_data_loader)
             ):
-                total_loss, (loss, v_loss, fk_loss, foot_loss) = self.diffusion(
-                    x, cond1, cond2, cond3, t_override=None
+                emb1, emb2, emb3 = self.model.get_embeddings(cond1, cond2, cond3)
+                total_loss, (loss, v_loss, fk_loss, foot_loss, align_loss) = self.diffusion(
+                    x, cond1, cond2, cond3, emb1, emb2, emb3, t_override=None
                 )
                 self.optim.zero_grad()
                 self.accelerator.backward(total_loss)
@@ -249,15 +260,14 @@ class EDGE:
                     avg_vloss += v_loss.detach().cpu().numpy()
                     avg_fkloss += fk_loss.detach().cpu().numpy()
                     avg_footloss += foot_loss.detach().cpu().numpy()
+                    avg_alignloss += align_loss.detach().cpu().numpy()
+
                     if step % opt.ema_interval == 0:
                         self.diffusion.ema.update_model_average(
                             self.diffusion.master_model, self.diffusion.model
                         )
-            # Save model
             if (epoch % opt.save_interval) == 0:
-                # everyone waits here for the val loop to finish ( don't start next train epoch early)
                 self.accelerator.wait_for_everyone()
-                # save only if on main thread
                 if self.accelerator.is_main_process:
                     self.eval()
                     # log
@@ -265,11 +275,13 @@ class EDGE:
                     avg_vloss /= len(train_data_loader)
                     avg_fkloss /= len(train_data_loader)
                     avg_footloss /= len(train_data_loader)
+                    avg_alignloss /= len(train_data_loader)
                     log_dict = {
                         "Train Loss": avg_loss,
                         "V Loss": avg_vloss,
                         "FK Loss": avg_fkloss,
-                        "Foot Loss": avg_footloss
+                        "Foot Loss": avg_footloss,
+                        "Align Loss": avg_alignloss
                     }
                     wandb.log(log_dict)
                     ckpt = {
@@ -281,27 +293,45 @@ class EDGE:
                         "normalizer": self.normalizer,
                     }
                     torch.save(ckpt, os.path.join(wdir, f"train-{epoch}.pt"))
-                    # generate a sample
-                    render_count = 2
-                    shape = (render_count, self.horizon, self.repr_dim)
-                    print("Generating Sample")
-                    # draw a music from the test dataset
-                    (x, cond1, cond2, cond3, filename, wavnames) = next(iter(test_data_loader))
-                    cond1 = cond1.to(self.accelerator.device)
-                    cond2 = cond2.to(self.accelerator.device)
-                    cond3 = cond3.to(self.accelerator.device)
-                    self.diffusion.render_sample(
-                        shape,
-                        cond1[:render_count],
-                        cond2[:render_count],
-                        cond3[:render_count],
-                        self.normalizer,
-                        epoch,
-                        os.path.join(opt.render_dir, "train_" + opt.exp_name),
-                        name=wavnames[:render_count],
-                        sound=True,
-                    )
-                    print(f"[MODEL SAVED at Epoch {epoch}]")
+                    
+                    # 🔧 修复4：优化sample生成，避免内存问题
+                    try:
+                        render_count = 1  # 减少到1个sample
+                        print(f"🎨 Generating Sample (epoch {epoch})...")
+                        
+                        # 清理GPU缓存
+                        torch.cuda.empty_cache()
+                        
+                        # 获取测试数据
+                        (x, cond1, cond2, cond3, filename, wavnames) = next(iter(test_data_loader))
+                        
+                        # 🔧 关键修复：使用EDGE的render_sample而不是diffusion的
+                        # 构造数据元组，模仿test.py的方式
+                        data_tuple = (
+                            x[:render_count], 
+                            cond1[:render_count], 
+                            cond2[:render_count], 
+                            cond3[:render_count], 
+                            wavnames[:render_count]
+                        )
+                        
+                        # 使用EDGE的render_sample方法，避免accelerator.device问题
+                        self.render_sample(
+                            data_tuple, 
+                            f"epoch_{epoch}", 
+                            os.path.join(opt.render_dir, "train_" + opt.exp_name), 
+                            render_count=render_count
+                        )
+                        
+                        print(f"✅ Sample generated successfully!")
+                        
+                    except Exception as e:
+                        print(f"⚠️  Sample generation failed (training continues): {e}")
+                        # 清理内存后继续
+                        torch.cuda.empty_cache()
+                    
+                    print(f"💾 [MODEL SAVED at Epoch {epoch}]")
+        
         if self.accelerator.is_main_process:
             wandb.run.finish()
 
@@ -309,15 +339,14 @@ class EDGE:
         self, data_tuple, label, render_dir, render_count=-1, fk_out=None, render=True
     ):
         _, cond1, cond2, cond3, wavname = data_tuple
-        assert len(cond1.shape) == 3
-        assert len(cond2.shape) == 3
-        assert len(cond3.shape) == 3
+        
         if render_count < 0:
             render_count = len(cond1)
         shape = (render_count, self.horizon, self.repr_dim)
         cond1 = cond1.to(self.accelerator.device)
         cond2 = cond2.to(self.accelerator.device)
         cond3 = cond3.to(self.accelerator.device)
+        print('wavname[:render_count]:', wavname[:render_count])
         self.diffusion.render_sample(
             shape,
             cond1[:render_count],

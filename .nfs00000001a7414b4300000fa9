@@ -1,0 +1,245 @@
+Starting training from scratch
+Model has 65094295 parameters
+🔧 Initializing text encoder with MotionDiffuse weights...
+entering
+haha: textTransEncoder.layers.0.self_attn.in_proj_weight text_proj.2.layers.0.self_attn.in_proj_weight
+yeah
+haha: textTransEncoder.layers.0.self_attn.in_proj_bias text_proj.2.layers.0.self_attn.in_proj_bias
+yeah
+haha: textTransEncoder.layers.0.self_attn.out_proj.weight text_proj.2.layers.0.self_attn.out_proj.weight
+yeah
+haha: textTransEncoder.layers.0.self_attn.out_proj.bias text_proj.2.layers.0.self_attn.out_proj.bias
+yeah
+haha: textTransEncoder.layers.0.linear1.weight text_proj.2.layers.0.linear1.weight
+yeah
+haha: textTransEncoder.layers.0.linear1.bias text_proj.2.layers.0.linear1.bias
+yeah
+haha: textTransEncoder.layers.0.linear2.weight text_proj.2.layers.0.linear2.weight
+yeah
+haha: textTransEncoder.layers.0.linear2.bias text_proj.2.layers.0.linear2.bias
+yeah
+haha: textTransEncoder.layers.0.norm1.weight text_proj.2.layers.0.norm1.weight
+yeah
+haha: textTransEncoder.layers.0.norm1.bias text_proj.2.layers.0.norm1.bias
+yeah
+haha: textTransEncoder.layers.0.norm2.weight text_proj.2.layers.0.norm2.weight
+yeah
+haha: textTransEncoder.layers.0.norm2.bias text_proj.2.layers.0.norm2.bias
+yeah
+haha: textTransEncoder.layers.1.self_attn.in_proj_weight text_proj.2.layers.1.self_attn.in_proj_weight
+yeah
+haha: textTransEncoder.layers.1.self_attn.in_proj_bias text_proj.2.layers.1.self_attn.in_proj_bias
+yeah
+haha: textTransEncoder.layers.1.self_attn.out_proj.weight text_proj.2.layers.1.self_attn.out_proj.weight
+yeah
+haha: textTransEncoder.layers.1.self_attn.out_proj.bias text_proj.2.layers.1.self_attn.out_proj.bias
+yeah
+haha: textTransEncoder.layers.1.linear1.weight text_proj.2.layers.1.linear1.weight
+yeah
+haha: textTransEncoder.layers.1.linear1.bias text_proj.2.layers.1.linear1.bias
+yeah
+haha: textTransEncoder.layers.1.linear2.weight text_proj.2.layers.1.linear2.weight
+yeah
+haha: textTransEncoder.layers.1.linear2.bias text_proj.2.layers.1.linear2.bias
+yeah
+haha: textTransEncoder.layers.1.norm1.weight text_proj.2.layers.1.norm1.weight
+yeah
+haha: textTransEncoder.layers.1.norm1.bias text_proj.2.layers.1.norm1.bias
+yeah
+haha: textTransEncoder.layers.1.norm2.weight text_proj.2.layers.1.norm2.weight
+yeah
+haha: textTransEncoder.layers.1.norm2.bias text_proj.2.layers.1.norm2.bias
+yeah
+haha: textTransEncoder.layers.2.self_attn.in_proj_weight text_proj.2.layers.2.self_attn.in_proj_weight
+yeah
+haha: textTransEncoder.layers.2.self_attn.in_proj_bias text_proj.2.layers.2.self_attn.in_proj_bias
+yeah
+haha: textTransEncoder.layers.2.self_attn.out_proj.weight text_proj.2.layers.2.self_attn.out_proj.weight
+yeah
+haha: textTransEncoder.layers.2.self_attn.out_proj.bias text_proj.2.layers.2.self_attn.out_proj.bias
+yeah
+haha: textTransEncoder.layers.2.linear1.weight text_proj.2.layers.2.linear1.weight
+yeah
+haha: textTransEncoder.layers.2.linear1.bias text_proj.2.layers.2.linear1.bias
+yeah
+haha: textTransEncoder.layers.2.linear2.weight text_proj.2.layers.2.linear2.weight
+yeah
+haha: textTransEncoder.layers.2.linear2.bias text_proj.2.layers.2.linear2.bias
+yeah
+haha: textTransEncoder.layers.2.norm1.weight text_proj.2.layers.2.norm1.weight
+yeah
+haha: textTransEncoder.layers.2.norm1.bias text_proj.2.layers.2.norm1.bias
+yeah
+haha: textTransEncoder.layers.2.norm2.weight text_proj.2.layers.2.norm2.weight
+yeah
+haha: textTransEncoder.layers.2.norm2.bias text_proj.2.layers.2.norm2.bias
+yeah
+haha: textTransEncoder.layers.3.self_attn.in_proj_weight text_proj.2.layers.3.self_attn.in_proj_weight
+yeah
+haha: textTransEncoder.layers.3.self_attn.in_proj_bias text_proj.2.layers.3.self_attn.in_proj_bias
+yeah
+haha: textTransEncoder.layers.3.self_attn.out_proj.weight text_proj.2.layers.3.self_attn.out_proj.weight
+yeah
+haha: textTransEncoder.layers.3.self_attn.out_proj.bias text_proj.2.layers.3.self_attn.out_proj.bias
+yeah
+haha: textTransEncoder.layers.3.linear1.weight text_proj.2.layers.3.linear1.weight
+yeah
+haha: textTransEncoder.layers.3.linear1.bias text_proj.2.layers.3.linear1.bias
+yeah
+haha: textTransEncoder.layers.3.linear2.weight text_proj.2.layers.3.linear2.weight
+yeah
+haha: textTransEncoder.layers.3.linear2.bias text_proj.2.layers.3.linear2.bias
+yeah
+haha: textTransEncoder.layers.3.norm1.weight text_proj.2.layers.3.norm1.weight
+yeah
+haha: textTransEncoder.layers.3.norm1.bias text_proj.2.layers.3.norm1.bias
+yeah
+haha: textTransEncoder.layers.3.norm2.weight text_proj.2.layers.3.norm2.weight
+yeah
+haha: textTransEncoder.layers.3.norm2.bias text_proj.2.layers.3.norm2.bias
+yeah
+Traceback (most recent call last):
+  File "train.py", line 22, in <module>
+    train(opt)
+  File "train.py", line 16, in train
+    model = EDGE(opt.feature_type, checkpoint_path=checkpoint_path)
+  File "/network_space/server129/sunyixuan/models/EDGE/EDGE.py", line 114, in __init__
+    self.model.multi_modal_pr[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mexp12[0m at: [34m[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../../../server129/sunyixuan/models/EDGE/wandb/run-20250807_213207-qoas9cik/logs[0m
+Traceback (most recent call last):
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/response_handle.py", line 105, in wait_async
+    await asyncio.wait_for(evt.wait(), timeout=timeout)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/asyncio/tasks.py", line 501, in wait_for
+    raise exceptions.TimeoutError()
+asyncio.exceptions.TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/wandb_init.py", line 996, in init
+    result = wait_with_progress(
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 24, in wait_with_progress
+    return wait_all_with_progress(
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 87, in wait_all_with_progress
+    return asyncio_compat.run(progress_loop_with_timeout)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 30, in run
+    return future.result()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/concurrent/futures/_base.py", line 444, in result
+    return self.__get_result()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/concurrent/futures/_base.py", line 389, in __get_result
+    raise self._exception
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/concurrent/futures/thread.py", line 57, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 74, in run
+    return asyncio.run(self._run_or_cancel(fn))
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/asyncio/base_events.py", line 616, in run_until_complete
+    return future.result()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 98, in _run_or_cancel
+    return fn_task.result()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 82, in progress_loop_with_timeout
+    return await _wait_handles_async(
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 132, in _wait_handles_async
+    task_group.start_soon(wait_single(index))
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/contextlib.py", line 178, in __aexit__
+    await self.gen.__anext__()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 190, in open_task_group
+    await task_group._wait_all()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 159, in _wait_all
+    raise exc
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 128, in wait_single
+    results[index] = await handle.wait_async(timeout=timeout)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/mailbox_handle.py", line 122, in wait_async
+    response = await self._handle.wait_async(timeout=timeout)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/response_handle.py", line 114, in wait_async
+    raise TimeoutError(
+TimeoutError: Timed out waiting for response on khillugpgwga
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "train.py", line 22, in <module>
+    train(opt)
+  File "train.py", line 17, in train
+    model.train_loop(opt)
+  File "/network_space/server129/sunyixuan/models/EDGE/EDGE.py", line 218, in train_loop
+    wandb.init(project=opt.wandb_pj_name, name=opt.exp_name)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/wandb_init.py", line 1620, in init
+    wandb._sentry.reraise(e)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/analytics/sentry.py", line 157, in reraise
+    raise exc.with_traceback(sys.exc_info()[2])
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/wandb_init.py", line 1606, in init
+    return wi.init(run_settings, run_config, run_printer)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/wandb_init.py", line 1009, in init
+    raise CommError(
+wandb.errors.errors.CommError: Run initialization has timed out after 90.0 sec. Please try increasing the timeout with the `init_timeout` setting: `wandb.init(settings=wandb.Settings(init_timeout=120))`.
+Traceback (most recent call last):
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/response_handle.py", line 105, in wait_async
+    await asyncio.wait_for(evt.wait(), timeout=timeout)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/asyncio/tasks.py", line 501, in wait_for
+    raise exceptions.TimeoutError()
+asyncio.exceptions.TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/wandb_init.py", line 996, in init
+    result = wait_with_progress(
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 24, in wait_with_progress
+    return wait_all_with_progress(
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 87, in wait_all_with_progress
+    return asyncio_compat.run(progress_loop_with_timeout)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 30, in run
+    return future.result()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/concurrent/futures/_base.py", line 444, in result
+    return self.__get_result()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/concurrent/futures/_base.py", line 389, in __get_result
+    raise self._exception
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/concurrent/futures/thread.py", line 57, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 74, in run
+    return asyncio.run(self._run_or_cancel(fn))
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/asyncio/base_events.py", line 616, in run_until_complete
+    return future.result()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 98, in _run_or_cancel
+    return fn_task.result()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 82, in progress_loop_with_timeout
+    return await _wait_handles_async(
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 132, in _wait_handles_async
+    task_group.start_soon(wait_single(index))
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/contextlib.py", line 178, in __aexit__
+    await self.gen.__anext__()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 190, in open_task_group
+    await task_group._wait_all()
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/lib/asyncio_compat.py", line 159, in _wait_all
+    raise exc
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/wait_with_progress.py", line 128, in wait_single
+    results[index] = await handle.wait_async(timeout=timeout)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/mailbox_handle.py", line 122, in wait_async
+    response = await self._handle.wait_async(timeout=timeout)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/mailbox/response_handle.py", line 114, in wait_async
+    raise TimeoutError(
+TimeoutError: Timed out waiting for response on khillugpgwga
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "train.py", line 22, in <module>
+    train(opt)
+  File "train.py", line 17, in train
+    model.train_loop(opt)
+  File "/network_space/server129/sunyixuan/models/EDGE/EDGE.py", line 218, in train_loop
+    wandb.init(project=opt.wandb_pj_name, name=opt.exp_name)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/wandb_init.py", line 1620, in init
+    wandb._sentry.reraise(e)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/analytics/sentry.py", line 157, in reraise
+    raise exc.with_traceback(sys.exc_info()[2])
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/wandb_init.py", line 1606, in init
+    return wi.init(run_settings, run_config, run_printer)
+  File "/network_space/storage43/sunyixuan/miniconda3/envs/edge-env/lib/python3.8/site-packages/wandb/sdk/wandb_init.py", line 1009, in init
+    raise CommError(
+wandb.errors.errors.CommError: Run initialization has timed out after 90.0 sec. Please try increasing the timeout with the `init_timeout` setting: `wandb.init(settings=wandb.Settings(init_timeout=120))`.

@@ -17,16 +17,15 @@ class BeatEncoder(nn.Module):
     独立的节拍编码器，使用Librosa进行节拍检测
     从原始BeatEncoder中提取出来
     """
-    def __init__(self, output_dim: int = 256, sr: int = 22050, hop_length: int = 512):
+    def __init__(self, output_dim: int = 2, sr: int = 22050, hop_length: int = 512):
         super().__init__()
         self.output_dim = output_dim
         self.sr = sr
         self.hop_length = hop_length
-        self.beat_projection = nn.Linear(2, output_dim)
         
         print(f"✓ Beat encoder initialized (sr={sr}, hop_length={hop_length}, output_dim={output_dim})")
         
-    def extract_beats(self, audio_path: str, target_length: int = None) -> Dict[str, any]:
+    def extract_beats(self, audio_path: str) -> Dict[str, any]:
         """
         从音频文件提取节拍特征
         
@@ -54,10 +53,10 @@ class BeatEncoder(nn.Module):
                 sr=sr, 
                 hop_length=self.hop_length,
                 units='time'
-            )
+            ) # (beat_num,)
             
             # 3. 强拍检测
-            downbeat_times = self._detect_downbeats_advanced(y, sr, beats, tempo)
+            downbeat_times = self._detect_downbeats_advanced(y, sr, beats, tempo)  # (downbeat_num,)
             
             # 4. 创建时间轴
             frame_times = np.linspace(0, audio_duration, target_length)
@@ -65,29 +64,16 @@ class BeatEncoder(nn.Module):
             # 5. 计算高斯临近度特征
             proximity_features = self._compute_gaussian_proximity(
                 frame_times, beats, downbeat_times, sigma=0.1
-            )
+            ) # (frame_num, 2)
             
             # 6. 投影到嵌入空间
             proximity_tensor = torch.from_numpy(proximity_features).float()
-            beat_embeddings = self.beat_projection(proximity_tensor)
+            # I'm sorry. 这里应该直接用proximity_tensor，我属于被claude蒙昏头脑了
+            # 但是先把它随机投影到256dim，再加一个learnable的256->512线性空间，理论上也可以，只不过表达能力会差，收敛会慢。
+            # beat_embeddings = self.beat_projection(proximity_tensor)
             
             return {
-                'embeddings': beat_embeddings.detach().numpy(),  # (target_length, output_dim)
-                'metadata': {
-                    'filename': os.path.basename(audio_path),
-                    'duration': audio_duration,
-                    'tempo': float(tempo),
-                    'num_beats': len(beats),
-                    'num_downbeats': len(downbeat_times),
-                    'target_length': target_length,
-                    'embedding_dim': self.output_dim
-                },
-                'raw_features': {
-                    'beat_times': beats.tolist(),
-                    'downbeat_times': downbeat_times.tolist(),
-                    'frame_times': frame_times.tolist(),
-                    'proximity_features': proximity_features.tolist()
-                }
+                'embeddings': proximity_tensor.detach().numpy()  # (target_length, output_dim)
             }
             
         except Exception as e:
@@ -95,18 +81,7 @@ class BeatEncoder(nn.Module):
             # 返回零特征作为后备
             zero_embeddings = np.zeros((target_length or 100, self.output_dim))
             return {
-                'embeddings': zero_embeddings,
-                'metadata': {
-                    'filename': os.path.basename(audio_path),
-                    'duration': 0.0,
-                    'tempo': 0.0,
-                    'num_beats': 0,
-                    'num_downbeats': 0,
-                    'target_length': target_length or 100,
-                    'embedding_dim': self.output_dim,
-                    'error': str(e)
-                },
-                'raw_features': None
+                'embeddings': zero_embeddings
             }
     
     def _detect_downbeats_advanced(self, y, sr, beat_times, tempo):
@@ -235,8 +210,7 @@ def find_audio_files(input_dir: str, extensions: List[str]) -> List[str]:
 
 
 def extract_beat_encodings_batch(beat_encoder: BeatEncoder, 
-                                audio_files: List[str],
-                                target_length: int = None) -> Dict[str, Dict]:
+                                audio_files: List[str]) -> Dict[str, Dict]:
     """
     批量提取节拍编码
     
@@ -252,16 +226,14 @@ def extract_beat_encodings_batch(beat_encoder: BeatEncoder,
     
     for audio_file in tqdm(audio_files, desc="Extracting beat encodings"):
         filename = os.path.basename(audio_file)
-        result = beat_encoder.extract_beats(audio_file, target_length)
+        result = beat_encoder.extract_beats(audio_file)
         results[filename] = result
     
     return results
 
 
 def save_beat_encodings(results: Dict[str, Dict], 
-                       output_dir: str,
-                       save_format: str = 'npy',
-                       save_metadata: bool = True):
+                       output_dir: str):
     """
     保存节拍编码
     
@@ -274,76 +246,29 @@ def save_beat_encodings(results: Dict[str, Dict],
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     
-    if save_format in ['npy', 'both']:
-        # 保存编码为.npy文件
-        npy_dir = output_path / 'npy'
-        npy_dir.mkdir(exist_ok=True)
-        
-        for filename, result in tqdm(results.items(), desc="Saving .npy files"):
-            base_name = os.path.splitext(filename)[0]
-            npy_path = npy_dir / f"{base_name}_beat_encoding.npy"
-            np.save(npy_path, result['embeddings'])
     
-    if save_format in ['json', 'both'] or save_metadata:
-        # 保存元数据
-        json_dir = output_path / 'json'
-        json_dir.mkdir(exist_ok=True)
+    npy_dir = output_path / 'npy'
+    npy_dir.mkdir(exist_ok=True)
         
-        # 收集所有元数据
-        all_metadata = {}
-        for filename, result in results.items():
-            all_metadata[filename] = result['metadata']
-            
-            # 可选：保存原始特征
-            if result['raw_features'] is not None:
-                base_name = os.path.splitext(filename)[0]
-                raw_features_path = json_dir / f"{base_name}_raw_features.json"
-                with open(raw_features_path, 'w') as f:
-                    json.dump(result['raw_features'], f, indent=2)
-        
-        # 保存汇总元数据
-        summary_metadata = {
-            'num_files': len(results),
-            'encoding_dim': list(results.values())[0]['metadata']['embedding_dim'] if results else 0,
-            'files': all_metadata
-        }
-        
-        with open(json_dir / 'beat_metadata.json', 'w') as f:
-            json.dump(summary_metadata, f, indent=2)
+    for filename, result in tqdm(results.items(), desc="Saving .npy files"):
+        base_name = os.path.splitext(filename)[0]
+        npy_path = npy_dir / f"{base_name}_beat_encoding.npy"
+        np.save(npy_path, result['embeddings'])
     
     print(f"✓ Saved {len(results)} beat encodings to {output_dir}")
-    
-    # 打印统计信息
-    successful = sum(1 for r in results.values() if 'error' not in r['metadata'])
-    failed = len(results) - successful
-    
-    if successful > 0:
-        avg_tempo = np.mean([r['metadata']['tempo'] for r in results.values() 
-                           if 'error' not in r['metadata'] and r['metadata']['tempo'] > 0])
-        print(f"  - Successfully processed: {successful}/{len(results)}")
-        print(f"  - Average tempo: {avg_tempo:.1f} BPM")
-    
-    if failed > 0:
-        print(f"  - Failed: {failed}/{len(results)}")
 
 
 def main():
     parser = argparse.ArgumentParser(description='Extract beat encodings from audio files')
-    parser.add_argument('input_dir', help='Directory containing audio files')
-    parser.add_argument('output_dir', help='Directory to save encodings')
+    parser.add_argument('--input_dir', help='Directory containing audio files')
+    parser.add_argument('--output_dir', help='Directory to save encodings')
     parser.add_argument('--audio_extensions', nargs='+', 
                        default=['.wav', '.mp3', '.flac', '.m4a', '.aac'],
                        help='Audio file extensions to process')
-    parser.add_argument('--target_length', type=int, default=None,
-                       help='Target sequence length (default: auto)')
     parser.add_argument('--sample_rate', type=int, default=22050,
                        help='Audio sample rate (default: 22050)')
-    parser.add_argument('--output_dim', type=int, default=256,
-                       help='Output embedding dimension (default: 256)')
-    parser.add_argument('--save_format', choices=['npy', 'json', 'both'], default='npy',
-                       help='Save format (default: npy)')
-    parser.add_argument('--save_metadata', action='store_true',
-                       help='Save metadata and raw features')
+    
+    
     
     args = parser.parse_args()
     
@@ -364,15 +289,14 @@ def main():
     
     # 初始化节拍编码器
     beat_encoder = BeatEncoder(
-        output_dim=args.output_dim,
+        output_dim=2,
         sr=args.sample_rate
     )
     
     # 提取编码
     results = extract_beat_encodings_batch(
         beat_encoder=beat_encoder,
-        audio_files=audio_files,
-        target_length=args.target_length
+        audio_files=audio_files
     )
     
     if not results:
@@ -382,9 +306,7 @@ def main():
     # 保存编码
     save_beat_encodings(
         results=results,
-        output_dir=args.output_dir,
-        save_format=args.save_format,
-        save_metadata=args.save_metadata
+        output_dir=args.output_dir
     )
 
 
