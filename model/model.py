@@ -12,6 +12,7 @@ from model.rotary_embedding_torch import RotaryEmbedding
 from model.utils import PositionalEncoding, SinusoidalPosEmb, prob_mask_like
 
 from typing import Dict
+import os
 
 class DenseFiLM(nn.Module):
     """Feature-wise linear modulation (FiLM) generator."""
@@ -237,9 +238,11 @@ class DecoderLayerStack(nn.Module):
         return x
 
 class MultiModalProjector(nn.Module):
-    def __init__(self, input_dims: Dict[str, int], hidden_dim: int = 512):
+    def __init__(self, input_dims: Dict[str, int], hidden_dim: int = 512, output_dim=512):
         super().__init__()
         self.hidden_dim = hidden_dim
+        self.output_dim = output_dim
+        self.text_dim = 256
 
         # Jukebox: 2-layer Transformer
         encoder_layer = lambda: nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=8, batch_first=True)
@@ -253,88 +256,198 @@ class MultiModalProjector(nn.Module):
         self.beat_proj = nn.Linear(input_dims['beat'], hidden_dim)
 
         # Text: 4-layer Transformer to get global pooled (512,)
-        encoder_layer_text = lambda: nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=8, batch_first=True)
+        encoder_layer_text = lambda: nn.TransformerEncoderLayer(d_model=self.text_dim, nhead=8, batch_first=True)
         self.text_proj = nn.Sequential(
-            nn.Linear(input_dims['text'], hidden_dim),
+            nn.Linear(input_dims['text'], self.text_dim),
             nn.ReLU(),
             nn.TransformerEncoder(encoder_layer_text(), num_layers=4),
+        )
+
+        self.text_align_proj = nn.Sequential(
+            nn.Linear(256, 512),
+            nn.LayerNorm(512),
+            nn.GELU(),
+            nn.Linear(512, 512),
+            nn.LayerNorm(512)
         )
 
         # Fusion MLP for feature1
         # 对应文中的cross-modal encoder
         self.fusion_mlp = nn.Sequential(
-            nn.LayerNorm(hidden_dim),
-            nn.Linear(hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim * 2),       # 1024 → 标准化
+            nn.Linear(hidden_dim * 2, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim)
+            nn.LayerNorm(hidden_dim)            # 再次归一化输出
         )
 
-    def load_text_encoder_weights(self, motiondiffuse_state_dict: Dict[str, torch.Tensor]):
-        print('entering')
-        new_state_dict = {}
-        
-        new_state_dict['text_proj.0.weight'] = motiondiffuse_state_dict['text_pre_proj.weight']
-        new_state_dict['text_proj.0.bias'] = motiondiffuse_state_dict['text_pre_proj.bias']
-        
-        for i in range(4):
-            source_prefix = f'textTransEncoder.layers.{i}'
-            target_prefix = f'text_proj.2.layers.{i}'
-            # Mapping for all weights and biases in a transformer layer
-            key_map = {
-                'self_attn.in_proj_weight': 'self_attn.in_proj_weight',
-                'self_attn.in_proj_bias': 'self_attn.in_proj_bias',
-                'self_attn.out_proj.weight': 'self_attn.out_proj.weight',
-                'self_attn.out_proj.bias': 'self_attn.out_proj.bias',
-                'linear1.weight': 'linear1.weight',
-                'linear1.bias': 'linear1.bias',
-                'linear2.weight': 'linear2.weight',
-                'linear2.bias': 'linear2.bias',
-                'norm1.weight': 'norm1.weight',
-                'norm1.bias': 'norm1.bias',
-                'norm2.weight': 'norm2.weight',
-                'norm2.bias': 'norm2.bias',
-            }
-            
-            for source_suffix, target_suffix in key_map.items():
-                source_key = f'{source_prefix}.{source_suffix}'
-                target_key = f'{target_prefix}.{target_suffix}'
-                print('haha:', source_key, target_key)
-                if source_key in motiondiffuse_state_dict.keys():
-                    print('yeah')
-                    new_state_dict[target_key] = motiondiffuse_state_dict[source_key]
-
-        # Load the mapped weights. strict=False is important because we are only
-        # loading a part of the model (the text encoder), not the whole thing.
-        self.load_state_dict(new_state_dict, strict=False)
-        print("✅ Successfully loaded MotionDiffuse weights into the text encoder.")
+        self.cross_modal_fusion_mlp = nn.Sequential(
+            nn.LayerNorm(hidden_dim * 2),       # 1024 → 标准化
+            nn.Linear(hidden_dim * 2, hidden_dim),
+            nn.ReLU(),
+            nn.LayerNorm(hidden_dim)            # 再次归一化输出
+        )
 
     def forward(self, jukebox_feat, beat_feat, text_feat):
         # shapes: (B, 150, ?), (B, 150, ?), (B, ?, ?)
 
         if text_feat.dim() == 1:
-            # 如果是 (512,)，扩展为 (1, 1, 512)
+            # 如果是 (256,)，扩展为 (1, 1, 256)
             text_feat = text_feat.unsqueeze(0).unsqueeze(0)
         elif text_feat.dim() == 2:
-            # 如果是 (B, 512)，扩展为 (B, 1, 512)
+            # 如果是 (B, 256)，扩展为 (B, 1, 256)
             text_feat = text_feat.unsqueeze(1)
         # Step 1: projection
         jukebox_out = self.jukebox_proj(jukebox_feat)  # (B, 150, 512)
         beat_out = self.beat_proj(beat_feat)           # (B, 150, 512)
 
         # Text projection: assume (B, T_text, D_text) → pool to (B, 512)
-        text_encoded = self.text_proj(text_feat.float())       # (B, T, 512)
+        text_encoded = self.text_proj(text_feat.float())       # (B, T, 256)
+        text_encoded = self.text_align_proj(text_encoded) # (B,T,256)->(B,T,512)
         text_pooled = text_encoded.mean(dim=1)         # (B, 512)
 
         # Step 2: feature1 for FiLM
-        fused_music = jukebox_out + beat_out           # (B, 150, 512)
+        fused_music = torch.cat([jukebox_out, beat_out], dim=-1)  # (B, 150, 1024)
         fused_music_mlp = self.fusion_mlp(fused_music) # (B, 150, 512)
-        text_added = fused_music_mlp + text_pooled.unsqueeze(1)  # (B, 150, 512)
-        feature1 = text_added
+        text_added = torch.cat([fused_music_mlp, text_pooled.unsqueeze(1).expand(-1, 150, -1)], dim=-1)  # (B, 150, 512)
+        feature1 = self.cross_modal_fusion_mlp(text_added)  # (B, 150, 512)
 
         # Step 3: feature2 for CA
         feature2 = torch.cat([fused_music_mlp, text_pooled.unsqueeze(1)], dim=1)  # (B, 151, 512)
 
         return feature1, feature2, fused_music_mlp.mean(dim=1), text_pooled
+
+def load_text_encoder(multi_modal_projector, motiondiffuse_state_dict: Dict[str, torch.Tensor]):
+    new_state_dict = {}
+    # 映射text_pre_proj权重
+    new_state_dict['text_proj.0.weight'] = motiondiffuse_state_dict['text_pre_proj.weight']
+    new_state_dict['text_proj.0.bias'] = motiondiffuse_state_dict['text_pre_proj.bias']
+    
+    # 映射transformer layers权重
+    for i in range(4):
+        source_prefix = f'textTransEncoder.layers.{i}'
+        target_prefix = f'text_proj.2.layers.{i}'
+        
+        key_map = {
+            'self_attn.in_proj_weight': 'self_attn.in_proj_weight',
+            'self_attn.in_proj_bias': 'self_attn.in_proj_bias',
+            'self_attn.out_proj.weight': 'self_attn.out_proj.weight',
+            'self_attn.out_proj.bias': 'self_attn.out_proj.bias',
+            'linear1.weight': 'linear1.weight',
+            'linear1.bias': 'linear1.bias',
+            'linear2.weight': 'linear2.weight',
+            'linear2.bias': 'linear2.bias',
+            'norm1.weight': 'norm1.weight',
+            'norm1.bias': 'norm1.bias',
+            'norm2.weight': 'norm2.weight',
+            'norm2.bias': 'norm2.bias',
+        }
+        
+        for source_suffix, target_suffix in key_map.items():
+            source_key = f'{source_prefix}.{source_suffix}'
+            target_key = f'{target_prefix}.{target_suffix}'
+            
+            if source_key in motiondiffuse_state_dict:
+                new_state_dict[target_key] = motiondiffuse_state_dict[source_key]
+    
+    # 加载权重到multi_modal_projector
+    multi_modal_projector.load_state_dict(new_state_dict, strict=False)
+    print("✅ Successfully loaded MotionDiffuse weights into text encoder")
+
+
+
+class MovementConvEncoder(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(MovementConvEncoder, self).__init__()
+        self.main = nn.Sequential(
+            nn.Conv1d(input_size, hidden_size, 4, 2, 1),
+            nn.Dropout(0.2, inplace=True),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv1d(hidden_size, output_size, 4, 2, 1),
+            nn.Dropout(0.2, inplace=True),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.out_net = nn.Linear(output_size, output_size)
+        
+
+    def forward(self, inputs):
+        inputs = inputs.permute(0, 2, 1)
+        outputs = self.main(inputs).permute(0, 2, 1)
+        # print(outputs.shape)
+        return self.out_net(outputs)
+
+class MotionProjectionEncoder(nn.Module):
+    """
+    完整的Motion处理模型：151维 -> 259维投影 -> 预训练Motion Encoder -> 512维输出
+    """
+    def __init__(self, projection_hidden_dim=256):
+        super(MotionProjectionEncoder, self).__init__()
+        
+        # 投影层：151维 -> 259维 (不frozen，可训练)
+        self.projection = nn.Sequential(
+            nn.Linear(151, projection_hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(projection_hidden_dim, 259)
+        )
+        
+        # 预训练的Motion Encoder (frozen)
+        # 从checkpoint信息可知：input_size=259, hidden_size=512, output_size=512
+        self.motion_encoder = MovementConvEncoder(
+            input_size=259,
+            hidden_size=512, 
+            output_size=512
+        )
+        
+        
+    def forward(self, x):
+        """
+        前向传播
+        Args:
+            x: 形状为 (batch_size, seq_len, 151) 的输入张量
+        Returns:
+            output: 形状为 (batch_size, seq_len//4, 512) 的输出张量
+                   (注意：由于Conv1d中stride=2被用了两次，序列长度会减少到原来的1/4)
+        """
+        # Step 1: 投影 151维 -> 259维
+        # x shape: (batch_size, seq_len, 151) -> (batch_size, seq_len, 259)
+        projected = self.projection(x)
+        
+        # Step 2: 通过预训练的Motion Encoder
+        # projected shape: (batch_size, seq_len, 259) -> (batch_size, seq_len//4, 512)
+        encoded = self.motion_encoder(projected)
+        
+        return encoded
+
+def load_motion_encoder_weights(motion_encoder: MotionProjectionEncoder, 
+                              checkpoint_path: str = "../HumanML3D/t2m/Decomp_SP001_SM001_H512/model/latest.tar"):
+    """
+    加载预训练的 Motion Encoder 权重到完整模型中
+    
+    Args:
+        model (MotionProjectionEncoder): 已经实例化的完整模型
+        checkpoint_path (str): 保存权重的 .tar 或 .pth 文件路径
+    """
+    if not os.path.exists(checkpoint_path):
+        raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
+    
+    print(f"[*] Loading checkpoint from: {checkpoint_path}")
+    
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    
+    # 检查 'movement_enc' 键是否存在
+    if 'movement_enc' not in checkpoint:
+        raise KeyError("Checkpoint does not contain the key 'movement_enc'. "
+                      f"Available keys are: {list(checkpoint.keys())}")
+    
+    # 提取 movement_enc 的 state_dict
+    movement_enc_state_dict = checkpoint['movement_enc']
+    
+    # 只加载motion_encoder部分的权重
+    motion_encoder.load_state_dict(movement_enc_state_dict)
+    
+     
+    for param in motion_encoder.parameters():
+        param.requires_grad = False  # 冻结所有参数
 
 
 """
@@ -395,7 +508,7 @@ class DanceDecoder(nn.Module):
         self.input_projection = nn.Linear(nfeats, latent_dim)
         
         self.multi_modal_projector = MultiModalProjector(
-            input_dims={'jukebox': 4800, 'beat': 256, 'text': 512},  # 假设 text 编码前是 512
+            input_dims={'jukebox': 4800, 'beat': 2, 'text': 512},  # 假设 text 编码前是 512
             hidden_dim=512
         )
         
@@ -423,6 +536,9 @@ class DanceDecoder(nn.Module):
         self.seqTransDecoder = DecoderLayerStack(decoderstack)
         
         self.final_layer = nn.Linear(latent_dim, output_feats)
+
+
+        self.motion_projection_encoder = MotionProjectionEncoder()
 
     """
     classifier-free guidance
@@ -501,8 +617,9 @@ class DanceDecoder(nn.Module):
         output = self.final_layer(output)
         return output
 
-    def get_embeddings(self, cond1: Tensor, cond2: Tensor, cond3: Tensor):
+    def get_embeddings(self, x: Tensor, cond1: Tensor, cond2: Tensor, cond3: Tensor):
         feature1, feature2, fuse_music_mlp_pooled, text_pooled = self.multi_modal_projector(cond1, cond2, cond3)
-
-        
-        return fuse_music_mlp_pooled, text_pooled
+        encoded_x = self.motion_projection_encoder(x)
+        encoded_x = encoded_x.mean(dim=1)
+        # print('shapes: ',fuse_music_mlp_pooled.shape, text_pooled.shape, encoded_x.shape)
+        return fuse_music_mlp_pooled, text_pooled, encoded_x

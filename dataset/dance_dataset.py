@@ -86,6 +86,7 @@ class AISTPPDataset(Dataset):
         filename_jukebox = self.data["filenames_jukebox"][idx]
         juke_feature = torch.from_numpy(np.load(filename_jukebox)).float()
         filename_beat = self.data["filenames_beat"][idx]
+        
         beat_feature = torch.from_numpy(np.load(filename_beat)).float()
         filename_text = self.data["filenames_text"][idx]
         text_feature = torch.from_numpy(np.load(filename_text)).float()
@@ -135,9 +136,9 @@ class AISTPPDataset(Dataset):
             b_name = os.path.splitext(os.path.basename(beat))[0]
             t_name = os.path.splitext(os.path.basename(text))[0]
             w_name = os.path.splitext(os.path.basename(wav))[0]
-            # assert m_name == j_name == b_name == t_name == w_name, str((motion, jukebox, beat, text, wav))
+            assert m_name == j_name == b_name == t_name == w_name, str((motion, jukebox, beat, text, wav))
             # load motion
-            print(m_name, j_name, b_name, t_name, w_name)
+            
             data = pickle.load(open(motion, "rb"))
             pos = data["pos"]
             q = data["q"]
@@ -151,7 +152,7 @@ class AISTPPDataset(Dataset):
         all_pos = np.array(all_pos)  # N x seq x 3
         all_q = np.array(all_q)  # N x seq x (joint * 3)
         # downsample the motions to the data fps
-        print(all_pos.shape)
+        
         all_pos = all_pos[:, :: self.data_stride, :]
         all_q = all_q[:, :: self.data_stride, :]
         data = {

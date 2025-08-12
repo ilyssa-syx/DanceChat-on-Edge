@@ -314,7 +314,7 @@ class GaussianDiffusion(nn.Module):
         half = x.shape[1] // 2
 
         x_start = None
-
+        print('hi from here', flush=True)
         for time, time_next, weight in tqdm(time_pairs, desc = 'sampling loop time step'):
             time_cond = torch.full((batch,), time, device=device, dtype=torch.long)
             pred_noise, x_start, *_ = self.model_predictions(x, cond1, cond2, cond3, time_cond, weight=weight, clip_x_start = self.clip_denoised) 
@@ -338,6 +338,7 @@ class GaussianDiffusion(nn.Module):
             if time > 0:
                 # the first half of each sequence is the second half of the previous one
                 x[1:, :half] = x[:-1, half:]
+        print('hi from long_ddim_sample', flush=True)
         return x
 
     @torch.no_grad()
@@ -475,7 +476,7 @@ class GaussianDiffusion(nn.Module):
         # reconstruct
         x_recon = self.model(x_noisy, cond1, cond2, cond3, t, cond_drop_prob=self.cond_drop_prob)
         assert noise.shape == x_recon.shape
-
+        # print('x_recon shape:', x_recon.shape)
         model_out = x_recon
         if self.predict_epsilon:
             target = noise
@@ -537,12 +538,14 @@ class GaussianDiffusion(nn.Module):
 
         align_loss = (1 - F.cosine_similarity(emb1, emb2, dim=-1)) + (1 - F.cosine_similarity(emb2, emb3, dim=-1))
 
+        align_loss = align_loss.mean()
+
         losses = (
             0.636 * loss.mean(),
             2.964 * v_loss.mean(),
             0.646 * fk_loss.mean(),
             10.942 * foot_loss.mean(),
-            0.005 * align_loss
+            0.55 * align_loss
         )
         return sum(losses), losses
 
@@ -585,13 +588,7 @@ class GaussianDiffusion(nn.Module):
         start_point=None,
         render=True
     ):
-        device = getattr(self, 'accelerator', None)
-        if device is not None:
-            device = device.device
-        else:
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-        cond1, cond2, cond3 = cond1.to(device), cond2.to(device), cond3.to(device)
+        print('cond device in Gaussian Diffusion:', cond1.device)
         if isinstance(shape, tuple):
             if mode == "inpaint":
                 func_class = self.inpaint_loop
@@ -616,7 +613,7 @@ class GaussianDiffusion(nn.Module):
             )
         else:
             samples = shape
-
+        print('finished sampling')
         samples = normalizer.unnormalize(samples)
 
         if samples.shape[2] == 151:

@@ -252,7 +252,7 @@ def save_beat_encodings(results: Dict[str, Dict],
         
     for filename, result in tqdm(results.items(), desc="Saving .npy files"):
         base_name = os.path.splitext(filename)[0]
-        npy_path = npy_dir / f"{base_name}_beat_encoding.npy"
+        npy_path = npy_dir / f"{base_name}.npy"
         np.save(npy_path, result['embeddings'])
     
     print(f"✓ Saved {len(results)} beat encodings to {output_dir}")

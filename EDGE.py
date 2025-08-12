@@ -17,6 +17,7 @@ from dataset.preprocess import increment_path
 from model.adan import Adan
 from model.diffusion import GaussianDiffusion
 from model.model import DanceDecoder
+from model.model import load_text_encoder, load_motion_encoder_weights
 from vis import SMPLSkeleton
 
 
@@ -56,7 +57,7 @@ class EDGE:
 
         self.accelerator.wait_for_everyone()
 
-        motiondiffuse_weights = torch.load("../text2motion/checkpoints/t2m/t2m_motiondiffuse/model/latest.tar")
+        motiondiffuse_weights = torch.load("../text2motion/checkpoints/t2m/t2m_motiondiffuse/model/latest.tar", map_location='cpu')
         motiondiffuse = motiondiffuse_weights['encoder']
 
 
@@ -82,7 +83,6 @@ class EDGE:
             cond_feature_dim=feature_dim,
             activation=F.gelu,
         )
-
         
 
         smpl = SMPLSkeleton(self.accelerator.device)
@@ -111,7 +111,19 @@ class EDGE:
 
         if self.accelerator.is_main_process:
             print("🔧 Initializing text encoder with MotionDiffuse weights...")
-        self.model.multi_modal_projector.load_text_encoder_weights(motiondiffuse)
+        
+        actual_model = self.model.module if hasattr(self.model, 'module') else self.model
+        load_text_encoder(
+            actual_model.multi_modal_projector,
+            motiondiffuse
+        )
+
+        humanml3d_checkpoint_path = "../HumanML3D/t2m/Decomp_SP001_SM001_H512/model/latest.tar"
+        load_motion_encoder_weights(
+            actual_model.motion_projection_encoder.motion_encoder,  # 注意这里的路径！
+            humanml3d_checkpoint_path
+        )
+        
         print('finished')
         # 🔧 修复2：改进模型状态加载，添加优化器状态加载
         if checkpoint_path != "":
@@ -138,6 +150,7 @@ class EDGE:
             
             if self.accelerator.is_main_process:
                 print("✅ Model checkpoint fully loaded!")
+        print('done with __init__')
 
     def eval(self):
         self.diffusion.eval()
@@ -212,6 +225,7 @@ class EDGE:
             if self.accelerator.is_main_process
             else lambda x: x
         )
+        print('done with load loop')
         if self.accelerator.is_main_process:
             save_dir = str(increment_path(Path(opt.project) / opt.exp_name))
             opt.exp_name = save_dir.split("/")[-1]
@@ -245,10 +259,12 @@ class EDGE:
             for step, (x, cond1, cond2, cond3, filename, wavnames) in enumerate(
                 load_loop(train_data_loader)
             ):
-                emb1, emb2, emb3 = self.model.get_embeddings(cond1, cond2, cond3)
+                # print('shape:', x.shape)
+                emb1, emb2, emb3 = self.model.module.get_embeddings(x, cond1, cond2, cond3)
                 total_loss, (loss, v_loss, fk_loss, foot_loss, align_loss) = self.diffusion(
                     x, cond1, cond2, cond3, emb1, emb2, emb3, t_override=None
                 )
+                # print('losses: ', loss, v_loss, fk_loss, foot_loss, align_loss)
                 self.optim.zero_grad()
                 self.accelerator.backward(total_loss)
 
@@ -293,34 +309,33 @@ class EDGE:
                         "normalizer": self.normalizer,
                     }
                     torch.save(ckpt, os.path.join(wdir, f"train-{epoch}.pt"))
-                    
+                    """
                     # 🔧 修复4：优化sample生成，避免内存问题
                     try:
-                        render_count = 1  # 减少到1个sample
+                        render_count = 2  # 减少到1个sample
                         print(f"🎨 Generating Sample (epoch {epoch})...")
                         
                         # 清理GPU缓存
                         torch.cuda.empty_cache()
-                        
+                        shape = (render_count, self.horizon, self.repr_dim)
                         # 获取测试数据
                         (x, cond1, cond2, cond3, filename, wavnames) = next(iter(test_data_loader))
                         
-                        # 🔧 关键修复：使用EDGE的render_sample而不是diffusion的
-                        # 构造数据元组，模仿test.py的方式
-                        data_tuple = (
-                            x[:render_count], 
-                            cond1[:render_count], 
-                            cond2[:render_count], 
-                            cond3[:render_count], 
-                            wavnames[:render_count]
-                        )
                         
-                        # 使用EDGE的render_sample方法，避免accelerator.device问题
-                        self.render_sample(
-                            data_tuple, 
-                            f"epoch_{epoch}", 
-                            os.path.join(opt.render_dir, "train_" + opt.exp_name), 
-                            render_count=render_count
+
+                        cond1 = cond1.to(self.accelerator.device)
+                        cond2 = cond2.to(self.accelerator.device)
+                        cond3 = cond3.to(self.accelerator.device)
+                        self.diffusion.render_sample(
+                            shape,
+                            cond1[:render_count],
+                            cond2[:render_count],
+                            cond3[:render_count],
+                            self.normalizer,
+                            epoch,
+                            os.path.join(opt.render_dir, "train_" + opt.exp_name),
+                            name=wavnames[:render_count],
+                            sound=True,
                         )
                         
                         print(f"✅ Sample generated successfully!")
@@ -329,7 +344,7 @@ class EDGE:
                         print(f"⚠️  Sample generation failed (training continues): {e}")
                         # 清理内存后继续
                         torch.cuda.empty_cache()
-                    
+                    """
                     print(f"💾 [MODEL SAVED at Epoch {epoch}]")
         
         if self.accelerator.is_main_process:
@@ -343,6 +358,7 @@ class EDGE:
         if render_count < 0:
             render_count = len(cond1)
         shape = (render_count, self.horizon, self.repr_dim)
+        print('accelerator device: ', self.accelerator.device)
         cond1 = cond1.to(self.accelerator.device)
         cond2 = cond2.to(self.accelerator.device)
         cond3 = cond3.to(self.accelerator.device)

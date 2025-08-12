@@ -1,0 +1,406 @@
+Using precomputed features
+Directory paths:
+  jukebox_dir: data/test/jukebox_feats
+  beat_dir: data/test/beat_feats/npy
+  text_dir: data/test/text_encodings/npy
+  wav_dir: data/test/wavs_sliced
+Found 186 juke files, 186 beat files, 186 text files, 186 wav files
+Sample juke files: ['data/test/jukebox_feats/gBR_sBM_cAll_d04_mBR0_ch02_slice0.npy', 'data/test/jukebox_feats/gBR_sBM_cAll_d04_mBR0_ch02_slice1.npy', 'data/test/jukebox_feats/gBR_sBM_cAll_d04_mBR0_ch02_slice2.npy']
+Sample beat files: ['data/test/beat_feats/npy/gBR_sBM_cAll_d04_mBR0_ch02_slice0.npy', 'data/test/beat_feats/npy/gBR_sBM_cAll_d04_mBR0_ch02_slice1.npy', 'data/test/beat_feats/npy/gBR_sBM_cAll_d04_mBR0_ch02_slice2.npy']
+Sample text files: ['data/test/text_encodings/npy/gBR_sBM_cAll_d04_mBR0_ch02_slice0.npy', 'data/test/text_encodings/npy/gBR_sBM_cAll_d04_mBR0_ch02_slice1.npy', 'data/test/text_encodings/npy/gBR_sBM_cAll_d04_mBR0_ch02_slice2.npy']
+Sample wav files: ['data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice0.wav', 'data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice1.wav', 'data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice2.wav']
+Debug first file:
+  juke_file: data/test/jukebox_feats/gBR_sBM_cAll_d04_mBR0_ch02_slice0.npy -> song: gBR_sBM_cAll_d04_mBR0_ch02_slice0
+  beat_file: data/test/beat_feats/npy/gBR_sBM_cAll_d04_mBR0_ch02_slice0.npy -> song: gBR_sBM_cAll_d04_mBR0_ch02_slice0
+  text_file: data/test/text_encodings/npy/gBR_sBM_cAll_d04_mBR0_ch02_slice0.npy -> song: gBR_sBM_cAll_d04_mBR0_ch02_slice0
+  wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice0.wav -> song: gBR_sBM_cAll_d04_mBR0_ch02_slice0
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice0.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice1.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice2.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice3.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice4.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice5.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice6.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice7.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice8.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice9.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice10.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice10.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice11.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice11.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice12.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice12.wav
+Processing slice: gBR_sBM_cAll_d04_mBR0_ch02_slice13.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice13.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice0.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice1.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice2.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice3.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice4.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice5.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice6.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice7.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice8.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice9.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice10.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice10.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice11.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice11.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice12.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice12.wav
+Processing slice: gBR_sBM_cAll_d05_mBR0_ch02_slice13.npy
+wav_file: data/test/wavs_sliced/gBR_sBM_cAll_d05_mBR0_ch02_slice13.wav
+Processing slice: gHO_sBM_cAll_d20_mHO5_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d20_mHO5_ch02_slice0.wav
+Processing slice: gHO_sBM_cAll_d20_mHO5_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d20_mHO5_ch02_slice1.wav
+Processing slice: gHO_sBM_cAll_d20_mHO5_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d20_mHO5_ch02_slice2.wav
+Processing slice: gHO_sBM_cAll_d20_mHO5_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d20_mHO5_ch02_slice3.wav
+Processing slice: gHO_sBM_cAll_d20_mHO5_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d20_mHO5_ch02_slice4.wav
+Processing slice: gHO_sBM_cAll_d21_mHO5_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d21_mHO5_ch02_slice0.wav
+Processing slice: gHO_sBM_cAll_d21_mHO5_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d21_mHO5_ch02_slice1.wav
+Processing slice: gHO_sBM_cAll_d21_mHO5_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d21_mHO5_ch02_slice2.wav
+Processing slice: gHO_sBM_cAll_d21_mHO5_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d21_mHO5_ch02_slice3.wav
+Processing slice: gHO_sBM_cAll_d21_mHO5_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gHO_sBM_cAll_d21_mHO5_ch02_slice4.wav
+Processing slice: gJB_sBM_cAll_d08_mJB5_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d08_mJB5_ch02_slice0.wav
+Processing slice: gJB_sBM_cAll_d08_mJB5_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d08_mJB5_ch02_slice1.wav
+Processing slice: gJB_sBM_cAll_d08_mJB5_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d08_mJB5_ch02_slice2.wav
+Processing slice: gJB_sBM_cAll_d08_mJB5_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d08_mJB5_ch02_slice3.wav
+Processing slice: gJB_sBM_cAll_d08_mJB5_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d08_mJB5_ch02_slice4.wav
+Processing slice: gJB_sBM_cAll_d09_mJB5_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d09_mJB5_ch02_slice0.wav
+Processing slice: gJB_sBM_cAll_d09_mJB5_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d09_mJB5_ch02_slice1.wav
+Processing slice: gJB_sBM_cAll_d09_mJB5_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d09_mJB5_ch02_slice2.wav
+Processing slice: gJB_sBM_cAll_d09_mJB5_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d09_mJB5_ch02_slice3.wav
+Processing slice: gJB_sBM_cAll_d09_mJB5_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gJB_sBM_cAll_d09_mJB5_ch02_slice4.wav
+Processing slice: gJS_sBM_cAll_d01_mJS3_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d01_mJS3_ch02_slice0.wav
+Processing slice: gJS_sBM_cAll_d01_mJS3_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d01_mJS3_ch02_slice1.wav
+Processing slice: gJS_sBM_cAll_d01_mJS3_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d01_mJS3_ch02_slice2.wav
+Processing slice: gJS_sBM_cAll_d01_mJS3_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d01_mJS3_ch02_slice3.wav
+Processing slice: gJS_sBM_cAll_d01_mJS3_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d01_mJS3_ch02_slice4.wav
+Processing slice: gJS_sBM_cAll_d01_mJS3_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d01_mJS3_ch02_slice5.wav
+Processing slice: gJS_sBM_cAll_d01_mJS3_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d01_mJS3_ch02_slice6.wav
+Processing slice: gJS_sBM_cAll_d01_mJS3_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d01_mJS3_ch02_slice7.wav
+Processing slice: gJS_sBM_cAll_d03_mJS3_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d03_mJS3_ch02_slice0.wav
+Processing slice: gJS_sBM_cAll_d03_mJS3_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d03_mJS3_ch02_slice1.wav
+Processing slice: gJS_sBM_cAll_d03_mJS3_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d03_mJS3_ch02_slice2.wav
+Processing slice: gJS_sBM_cAll_d03_mJS3_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d03_mJS3_ch02_slice3.wav
+Processing slice: gJS_sBM_cAll_d03_mJS3_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d03_mJS3_ch02_slice4.wav
+Processing slice: gJS_sBM_cAll_d03_mJS3_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d03_mJS3_ch02_slice5.wav
+Processing slice: gJS_sBM_cAll_d03_mJS3_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d03_mJS3_ch02_slice6.wav
+Processing slice: gJS_sBM_cAll_d03_mJS3_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gJS_sBM_cAll_d03_mJS3_ch02_slice7.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice0.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice1.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice2.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice3.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice4.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice5.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice6.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice7.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice8.wav
+Processing slice: gKR_sBM_cAll_d28_mKR2_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d28_mKR2_ch02_slice9.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice0.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice1.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice2.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice3.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice4.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice5.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice6.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice7.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice8.wav
+Processing slice: gKR_sBM_cAll_d30_mKR2_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gKR_sBM_cAll_d30_mKR2_ch02_slice9.wav
+Processing slice: gLH_sBM_cAll_d17_mLH4_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d17_mLH4_ch02_slice0.wav
+Processing slice: gLH_sBM_cAll_d17_mLH4_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d17_mLH4_ch02_slice1.wav
+Processing slice: gLH_sBM_cAll_d17_mLH4_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d17_mLH4_ch02_slice2.wav
+Processing slice: gLH_sBM_cAll_d17_mLH4_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d17_mLH4_ch02_slice3.wav
+Processing slice: gLH_sBM_cAll_d17_mLH4_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d17_mLH4_ch02_slice4.wav
+Processing slice: gLH_sBM_cAll_d17_mLH4_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d17_mLH4_ch02_slice5.wav
+Processing slice: gLH_sBM_cAll_d17_mLH4_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d17_mLH4_ch02_slice6.wav
+Processing slice: gLH_sBM_cAll_d18_mLH4_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d18_mLH4_ch02_slice0.wav
+Processing slice: gLH_sBM_cAll_d18_mLH4_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d18_mLH4_ch02_slice1.wav
+Processing slice: gLH_sBM_cAll_d18_mLH4_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d18_mLH4_ch02_slice2.wav
+Processing slice: gLH_sBM_cAll_d18_mLH4_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d18_mLH4_ch02_slice3.wav
+Processing slice: gLH_sBM_cAll_d18_mLH4_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d18_mLH4_ch02_slice4.wav
+Processing slice: gLH_sBM_cAll_d18_mLH4_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d18_mLH4_ch02_slice5.wav
+Processing slice: gLH_sBM_cAll_d18_mLH4_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gLH_sBM_cAll_d18_mLH4_ch02_slice6.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice0.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice1.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice2.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice3.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice4.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice5.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice6.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice7.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice8.wav
+Processing slice: gLO_sBM_cAll_d13_mLO2_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d13_mLO2_ch02_slice9.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice0.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice1.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice2.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice3.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice4.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice5.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice6.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice7.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice8.wav
+Processing slice: gLO_sBM_cAll_d15_mLO2_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gLO_sBM_cAll_d15_mLO2_ch02_slice9.wav
+Processing slice: gMH_sBM_cAll_d22_mMH3_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d22_mMH3_ch02_slice0.wav
+Processing slice: gMH_sBM_cAll_d22_mMH3_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d22_mMH3_ch02_slice1.wav
+Processing slice: gMH_sBM_cAll_d22_mMH3_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d22_mMH3_ch02_slice2.wav
+Processing slice: gMH_sBM_cAll_d22_mMH3_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d22_mMH3_ch02_slice3.wav
+Processing slice: gMH_sBM_cAll_d22_mMH3_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d22_mMH3_ch02_slice4.wav
+Processing slice: gMH_sBM_cAll_d22_mMH3_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d22_mMH3_ch02_slice5.wav
+Processing slice: gMH_sBM_cAll_d22_mMH3_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d22_mMH3_ch02_slice6.wav
+Processing slice: gMH_sBM_cAll_d22_mMH3_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d22_mMH3_ch02_slice7.wav
+Processing slice: gMH_sBM_cAll_d24_mMH3_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d24_mMH3_ch02_slice0.wav
+Processing slice: gMH_sBM_cAll_d24_mMH3_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d24_mMH3_ch02_slice1.wav
+Processing slice: gMH_sBM_cAll_d24_mMH3_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d24_mMH3_ch02_slice2.wav
+Processing slice: gMH_sBM_cAll_d24_mMH3_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d24_mMH3_ch02_slice3.wav
+Processing slice: gMH_sBM_cAll_d24_mMH3_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d24_mMH3_ch02_slice4.wav
+Processing slice: gMH_sBM_cAll_d24_mMH3_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d24_mMH3_ch02_slice5.wav
+Processing slice: gMH_sBM_cAll_d24_mMH3_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d24_mMH3_ch02_slice6.wav
+Processing slice: gMH_sBM_cAll_d24_mMH3_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gMH_sBM_cAll_d24_mMH3_ch02_slice7.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice0.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice1.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice2.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice3.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice4.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice5.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice6.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice7.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice8.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice9.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice10.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice10.wav
+Processing slice: gPO_sBM_cAll_d10_mPO1_ch02_slice11.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d10_mPO1_ch02_slice11.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice0.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice1.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice2.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice3.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice4.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice5.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice6.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice7.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice8.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice9.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice10.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice10.wav
+Processing slice: gPO_sBM_cAll_d11_mPO1_ch02_slice11.npy
+wav_file: data/test/wavs_sliced/gPO_sBM_cAll_d11_mPO1_ch02_slice11.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice0.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice1.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice2.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice3.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice4.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice5.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice6.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice7.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice8.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice9.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice10.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice10.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice11.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice11.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice12.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice12.wav
+Processing slice: gWA_sBM_cAll_d25_mWA0_ch02_slice13.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d25_mWA0_ch02_slice13.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice0.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice0.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice1.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice1.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice2.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice2.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice3.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice3.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice4.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice4.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice5.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice5.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice6.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice6.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice7.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice7.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice8.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice8.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice9.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice9.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice10.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice10.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice11.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice11.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice12.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice12.wav
+Processing slice: gWA_sBM_cAll_d26_mWA0_ch02_slice13.npy
+wav_file: data/test/wavs_sliced/gWA_sBM_cAll_d26_mWA0_ch02_slice13.wav
+Total processed slices: 186
+Loading checkpoint from: runs/train/exp3/weights/train-2000.pt
+✅ Checkpoint loaded successfully
+Model has 60357530 parameters
+🔧 Initializing text encoder with MotionDiffuse weights...
+✅ Successfully loaded MotionDiffuse weights into text encoder
+[*] Loading checkpoint from: ../HumanML3D/t2m/Decomp_SP001_SM001_H512/model/latest.tar
+finished
+🔄 Loading model and optimizer states...
+✅ Optimizer state loaded
+✅ Model checkpoint fully loaded!
+done with __init__
+Generating dances for 186 slices
+all_filenames[i]: ['data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice0.wav']
+accelerator device:  cuda
+wavname[:render_count]: ['data/test/wavs_sliced/gBR_sBM_cAll_d04_mBR0_ch02_slice0.wav']
+cond device in Gaussian Diffusion: cuda:0
+sampling loop time step:   0%|          | 0/50 [00:00<?, ?it/s]sampling loop time step:   2%|▏         | 1/50 [00:00<00:41,  1.17it/s]sampling loop time step:  10%|█         | 5/50 [00:00<00:06,  6.64it/s]sampling loop time step:  18%|█▊        | 9/50 [00:01<00:03, 12.02it/s]sampling loop time step:  26%|██▌       | 13/50 [00:01<00:02, 17.03it/s]sampling loop time step:  34%|███▍      | 17/50 [00:01<00:01, 21.29it/s]sampling loop time step:  42%|████▏     | 21/50 [00:01<00:01, 24.89it/s]sampling loop time step:  50%|█████     | 25/50 [00:01<00:00, 27.76it/s]sampling loop time step:  58%|█████▊    | 29/50 [00:01<00:00, 29.96it/s]sampling loop time step:  66%|██████▌   | 33/50 [00:01<00:00, 31.63it/s]sampling loop time step:  74%|███████▍  | 37/50 [00:01<00:00, 32.62it/s]sampling loop time step:  82%|████████▏ | 41/50 [00:01<00:00, 34.18it/s]sampling loop time step:  90%|█████████ | 45/50 [00:02<00:00, 35.36it/s]sampling loop time step:  98%|█████████▊| 49/50 [00:02<00:00, 36.13it/s]sampling loop time step: 100%|██████████| 50/50 [00:02<00:00, 22.75it/s]
